@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#161b22"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#238636"/>
+      <stop offset="100%" style="stop-color:#2ea043"/>
+    </linearGradient>
+    <linearGradient id="pulse-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#238636;stop-opacity:0"/>
+      <stop offset="50%" style="stop-color:#3fb950;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#238636;stop-opacity:0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-strong">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="clip"><rect width="900" height="220" rx="12"/></clipPath>
+    <linearGradient id="flame-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0883e"/>
+      <stop offset="100%" style="stop-color:#e3b341;stop-opacity:0.3"/>
+    </linearGradient>
+    <linearGradient id="rocket-body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3fb950"/>
+      <stop offset="100%" style="stop-color:#238636"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <!-- Background -->
+    <rect width="900" height="220" fill="url(#bg)"/>
+
+    <!-- Subtle grid lines -->
+    <g opacity="0.04" stroke="#f0f6fc" stroke-width="0.5">
+      <line x1="0" y1="40" x2="900" y2="40"/>
+      <line x1="0" y1="80" x2="900" y2="80"/>
+      <line x1="0" y1="120" x2="900" y2="120"/>
+      <line x1="0" y1="160" x2="900" y2="160"/>
+      <line x1="0" y1="200" x2="900" y2="200"/>
+      <line x1="100" y1="0" x2="100" y2="220"/>
+      <line x1="200" y1="0" x2="200" y2="220"/>
+      <line x1="300" y1="0" x2="300" y2="220"/>
+      <line x1="400" y1="0" x2="400" y2="220"/>
+      <line x1="500" y1="0" x2="500" y2="220"/>
+      <line x1="600" y1="0" x2="600" y2="220"/>
+      <line x1="700" y1="0" x2="700" y2="220"/>
+      <line x1="800" y1="0" x2="800" y2="220"/>
+    </g>
+
+    <!-- Rocket icon area (left side) -->
+    <g transform="translate(80, 65)">
+      <!-- Rocket body -->
+      <rect x="-12" y="10" width="24" height="50" rx="4" fill="url(#rocket-body)" filter="url(#glow)"/>
+
+      <!-- Nose cone -->
+      <path d="M-12 10 L0 -15 L12 10 Z" fill="#3fb950" filter="url(#glow)"/>
+
+      <!-- Window -->
+      <circle cx="0" cy="25" r="5" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
+      <circle cx="0" cy="25" r="2" fill="#58a6ff" opacity="0.3"/>
+
+      <!-- Left fin -->
+      <path d="M-12 45 L-22 65 L-12 60 Z" fill="#238636"/>
+
+      <!-- Right fin -->
+      <path d="M12 45 L22 65 L12 60 Z" fill="#238636"/>
+
+      <!-- Exhaust flame -->
+      <g filter="url(#glow-strong)">
+        <path d="M-8 60 Q0 90 8 60" fill="url(#flame-grad)" opacity="0.9">
+          <animate attributeName="opacity" values="0.6;1;0.6" dur="0.8s" repeatCount="indefinite"/>
+        </path>
+        <path d="M-5 60 Q0 82 5 60" fill="#e3b341" opacity="0.7">
+          <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.6s" repeatCount="indefinite"/>
+        </path>
+        <path d="M-3 60 Q0 75 3 60" fill="#f0f6fc" opacity="0.5">
+          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="0.5s" repeatCount="indefinite"/>
+        </path>
+      </g>
+
+      <!-- Exhaust glow ring -->
+      <ellipse cx="0" cy="62" rx="10" ry="3" fill="#f0883e" opacity="0.3">
+        <animate attributeName="opacity" values="0.1;0.4;0.1" dur="0.8s" repeatCount="indefinite"/>
+        <animate attributeName="rx" values="8;12;8" dur="0.8s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+
+    <!-- Divider line -->
+    <line x1="160" y1="20" x2="160" y2="165" stroke="#30363d" stroke-width="1"/>
+
+    <!-- Title -->
+    <text x="190" y="62" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="42" font-weight="bold" fill="#f0f6fc" filter="url(#glow)">taem</text>
+
+    <!-- Tagline -->
+    <text x="190" y="85" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="14" fill="#8b949e">Mission control preflight kernel  •  v0.0.1</text>
+
+    <!-- Green accent bar with animation -->
+    <rect x="190" y="96" width="0" height="3" rx="1.5" fill="url(#accent)">
+      <animate attributeName="width" from="0" to="460" dur="1.5s" fill="freeze" begin="0.3s"/>
+    </rect>
+
+    <!-- Feature pills row -->
+    <g transform="translate(190, 118)">
+      <!-- Gate Protocol pill (green) -->
+      <rect x="0" y="0" width="110" height="26" rx="13" fill="#238636" opacity="0.2" stroke="#238636" stroke-width="1"/>
+      <text x="55" y="17" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="11" fill="#3fb950" text-anchor="middle">Gate Protocol</text>
+
+      <!-- 15 Controllers pill (blue) -->
+      <rect x="122" y="0" width="116" height="26" rx="13" fill="#1f6feb" opacity="0.2" stroke="#1f6feb" stroke-width="1"/>
+      <text x="180" y="17" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="11" fill="#58a6ff" text-anchor="middle">15 Controllers</text>
+
+      <!-- Ollama→Anthropic pill (purple) -->
+      <rect x="250" y="0" width="146" height="26" rx="13" fill="#6e40c9" opacity="0.2" stroke="#6e40c9" stroke-width="1"/>
+      <text x="323" y="17" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="11" fill="#bc8cff" text-anchor="middle">Ollama→Anthropic</text>
+
+      <!-- Go Binary pill (yellow) -->
+      <rect x="408" y="0" width="94" height="26" rx="13" fill="#b08800" opacity="0.2" stroke="#b08800" stroke-width="1"/>
+      <text x="455" y="17" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="11" fill="#e3b341" text-anchor="middle">Go Binary</text>
+    </g>
+
+    <!-- Bottom architecture bar -->
+    <rect x="0" y="172" width="900" height="48" fill="#161b22"/>
+    <line x1="0" y1="172" x2="900" y2="172" stroke="#30363d" stroke-width="0.5"/>
+
+    <!-- Architecture flow with pulsing dots -->
+    <g transform="translate(40, 196)">
+      <!-- CLI dot -->
+      <circle cx="0" cy="0" r="4" fill="#3fb950" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="0s"/>
+      </circle>
+      <text x="14" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#8b949e">CLI</text>
+
+      <!-- Arrow 1 -->
+      <text x="52" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#484f58">→</text>
+
+      <!-- Kernel dot -->
+      <circle cx="80" cy="0" r="4" fill="#3fb950" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+      </circle>
+      <text x="94" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#8b949e">Kernel</text>
+
+      <!-- Arrow 2 -->
+      <text x="156" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#484f58">→</text>
+
+      <!-- Gate dot -->
+      <circle cx="184" cy="0" r="4" fill="#3fb950" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+      </circle>
+      <text x="198" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#8b949e">Gate</text>
+
+      <!-- Arrow 3 -->
+      <text x="240" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#484f58">→</text>
+
+      <!-- Controllers dot -->
+      <circle cx="268" cy="0" r="4" fill="#3fb950" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="0.9s"/>
+      </circle>
+      <text x="282" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#8b949e">Controllers</text>
+
+      <!-- Arrow 4 -->
+      <text x="382" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#484f58">→</text>
+
+      <!-- mc-state dot -->
+      <circle cx="410" cy="0" r="4" fill="#3fb950" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="1.2s"/>
+      </circle>
+      <text x="424" y="4" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="12" fill="#8b949e">mc-state</text>
+    </g>
+
+    <!-- Corner version badge -->
+    <rect x="830" y="12" width="56" height="22" rx="11" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="858" y="27" font-family="'SF Mono','Fira Code','Cascadia Code',monospace" font-size="11" fill="#8b949e" text-anchor="middle">v0.0.1</text>
+  </g>
+</svg>

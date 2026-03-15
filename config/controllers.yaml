@@ -1,0 +1,301 @@
+# TAEM Controller Registry
+# taem-dev/taem/config/controllers.yaml
+#
+# Normative source of truth for all controller definitions.
+# The kernel reads this at startup. Changes to mode: require an ADR amendment
+# per ADR-005 C-005-005. The kernel refuses to start with any missing fields.
+#
+# Execution paths per ADR-007:
+#   local_deterministic  → runs as goroutine in kernel process
+#   local_inference      → runs as goroutine, calls Ollama→Anthropic
+#   github_dispatch      → kernel dispatches to GitHub Actions, waits
+
+inference_defaults:
+  ollama_model: "llama3.2"
+  confidence_threshold: 0.85
+  timeout_s: 45
+  fallback: "anthropic"
+  anthropic_model: "claude-sonnet-4-6"
+
+controllers:
+
+  # ── PHASE 00: PAD CHECK ────────────────────────────────────────────────────
+
+  - callsign: GC
+    name: "Ground Control — Infrastructure Health"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [0]
+    required: true
+    timeout_s: 10
+    impl: internal/controller/deterministic/gc
+    signal_type: "GO | NO-GO"
+    description: >
+      HTTP ping checks against ground systems. Binary reachable/unreachable.
+      Checks: GitHub API, Qdrant (if configured), Ollama (if configured),
+      Tailscale advisory. Aborts mission before any token is spent.
+
+  - callsign: DPS
+    name: "Data Processing Systems — mc-state Schema Integrity"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [0, 2, 4, 6]
+    required: true
+    timeout_s: 10
+    impl: internal/controller/deterministic/dps
+    signal_type: "GO | NO-GO"
+    description: >
+      JSON Schema validation of all mission JSONL files against schemas/.
+      Validates manifest.jsonl, signals.jsonl (so far), integration-map.json
+      if present. Catches schema drift before downstream controllers read
+      corrupt data.
+
+  - callsign: EECOM
+    name: "Electrical, Environmental & Consumables — Resource Monitor"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [0]
+    required: true
+    timeout_s: 10
+    impl: internal/controller/deterministic/eecom
+    signal_type: "GO | WARN | NO-GO"
+    description: >
+      GitHub API rate_limit endpoint check. Arithmetic against thresholds.
+      WARN at < 25% headroom. NO-GO at < 10%.
+      Also estimates token burn for remaining phases based on corpus size.
+
+  # ── PHASE 01: CORPUS INGESTION ────────────────────────────────────────────
+
+  - callsign: NAV
+    name: "Dependency Navigator — Integration Map Builder"
+    mode: deterministic
+    execution: github_dispatch
+    phase: [1]
+    required: true
+    timeout_s: 300
+    impl: ".github/workflows/controllers/nav.yml"
+    signal_type: "GO | NO-GO | HOLD"
+    description: >
+      Dispatched to GitHub Actions for App token access to target repos.
+      Diffs against ecosystem repo_surfaces collection (ADR-006 C-006-003).
+      Cache hits skip re-read. Writes updated surfaces to ecosystem.
+      Produces integration-map.json committed to mc-state mission dir.
+      HOLD if ecosystem unreachable (ADR-006 C-006-004).
+
+  - callsign: FAO
+    name: "Flight Activities Officer — Phase Timeline"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [0, 1, 2, 3, 4, 5, 6]
+    required: false
+    timeout_s: 2
+    impl: internal/controller/deterministic/fao
+    signal_type: "ADVISORY"
+    description: >
+      Timestamps every phase start and completion. Computes elapsed time.
+      Emits ADVISORY if phase exceeds expected window.
+      Writes duration_s to index.jsonl on mission close.
+      Non-blocking — ADVISORY does not gate phase advancement.
+
+  # ── PHASE 02: ARCHITECTURAL SURVEY ───────────────────────────────────────
+
+  - callsign: ARCH
+    name: "Architecture Officer — ADR Compliance"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [2, 3, 4]
+    required: true
+    timeout_s: 30
+    impl: internal/controller/deterministic/arch
+    signal_type: "GO | NO-GO"
+    description: >
+      Loads ADR corpus from taem-dev/adrs (via ecosystem constraint_index).
+      Evaluates check: expressions against integration-map.json and plan.
+      HARD constraint violation = auto NO-GO with constraint_ref citation.
+      SOFT constraint violation = WARN (non-blocking in isolation, gates
+      only if FAO reports timeline at risk).
+      Enriches integration-map.json wiring[] with arch_status: CLEARED.
+
+  - callsign: CDS
+    name: "Conflict Detection Systems"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [2]
+    required: true
+    timeout_s: 10
+    impl: internal/controller/deterministic/cds
+    signal_type: "GO | NO-GO"
+    description: >
+      Reads conflicts[] array from integration-map.json produced by NAV.
+      Set intersection on tool names, port numbers, schema field names.
+      Classifies each conflict by type and resolves to GO/NO-GO.
+
+  - callsign: PCO
+    name: "Pattern Compliance Officer"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [2, 3, 4]
+    required: true
+    timeout_s: 10
+    impl: internal/controller/deterministic/pco
+    signal_type: "GO | NO-GO"
+    description: >
+      Pattern registry is a defined list in config/patterns.yaml.
+      Checks integration plan against: MCP server structure, uv packaging,
+      Go module layout, JSONL state pattern, GitHub App auth.
+      Unjustified deviation is NO-GO. Justified deviation (with ADR ref) is GO.
+
+  # ── PHASE 03: PLAN FORMULATION ────────────────────────────────────────────
+
+  - callsign: INCO
+    name: "Integration Sequencer — Step Order"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [3]
+    required: true
+    timeout_s: 15
+    impl: internal/controller/deterministic/inco
+    signal_type: "GO | NO-GO"
+    description: >
+      Topological sort of integration steps from integration-map.json.
+      Detects shared-interface write conflicts between proposed steps.
+      Produces step-plan.json per step-plan.schema.json.
+      GO when step-plan.json is written with no ordering conflicts.
+
+  # ── PHASE 04: PRE-CODE INSPECTION ────────────────────────────────────────
+
+  - callsign: SECINSP
+    name: "Security Inspector — Runs Before PRB"
+    mode: inference
+    execution: local_inference
+    phase: [4, 6]
+    required: true
+    timeout_s: 90
+    impl: internal/controller/inference/secinsp
+    signal_type: "GO | NO-GO"
+    inference:
+      ollama_model: "llama3.2"
+      confidence_threshold: 0.85
+      fallback: "anthropic"
+      anthropic_model: "claude-sonnet-4-6"
+      system_prompt_file: "prompts/secinsp.txt"
+    description: >
+      Two-pass security analysis. Pass 1 (deterministic): known bad patterns
+      via regex scan — auth gaps, secret exposure, banned permission scopes.
+      Pass 2 (inference): novel attack surface recognition, privilege
+      escalation paths not covered by known patterns.
+      Runs Ollama first per ADR-005. Anthropic fallback at 0.85 threshold.
+
+  - callsign: TRC
+    name: "Test Readiness Controller"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [4, 6]
+    required: true
+    timeout_s: 20
+    impl: internal/controller/deterministic/trc
+    signal_type: "GO | NO-GO"
+    description: >
+      File existence check for test harness. Function signature grep.
+      Test command parse and validation. Interface stability check.
+      All steps in step-plan.json must have non-null test_harness field.
+
+  # ── PHASE 04b: PEER REVIEW BOARD ──────────────────────────────────────────
+  # PRB sub-agents run after SECINSP + TRC. All three run concurrently.
+  # Vote aggregation is in kernel gate.go — 2/3 required, tie = NO-GO.
+
+  - callsign: PRB-SKP
+    name: "PRB Skeptic — Adversarial Sub-Agent"
+    mode: inference
+    execution: local_inference
+    phase: [4]
+    required: true
+    timeout_s: 90
+    impl: internal/controller/inference/prb/skeptic
+    signal_type: "GO | NO-GO"
+    inference:
+      ollama_model: "llama3.2"
+      confidence_threshold: 0.85
+      fallback: "anthropic"
+      anthropic_model: "claude-sonnet-4-6"
+      system_prompt_file: "prompts/prb_skeptic.txt"
+    description: >
+      Hard adversarial. Assumes plan will fail. Finds the kill shot.
+      Queries ecosystem lessons_learned for similar prior failures before
+      assessment. This is the Skeptic's primary advantage over prior missions.
+      Reads: step-plan.json, integration-map.json, lessons_learned query.
+
+  - callsign: PRB-COR
+    name: "PRB Correctness Auditor"
+    mode: inference
+    execution: local_inference
+    phase: [4]
+    required: true
+    timeout_s: 90
+    impl: internal/controller/inference/prb/correctness
+    signal_type: "GO | NO-GO"
+    inference:
+      ollama_model: "llama3.2"
+      confidence_threshold: 0.85
+      fallback: "anthropic"
+      anthropic_model: "claude-sonnet-4-6"
+      system_prompt_file: "prompts/prb_correctness.txt"
+    description: >
+      Verifies plan is internally consistent, complete, and technically
+      accurate. Checks step output → next step input validity.
+      A plan that requires improvisation during implementation is NO-GO.
+
+  - callsign: PRB-ADR
+    name: "PRB ADR Compliance Auditor"
+    mode: inference
+    execution: local_inference
+    phase: [4]
+    required: true
+    timeout_s: 90
+    impl: internal/controller/inference/prb/adr_audit
+    signal_type: "GO | NO-GO"
+    inference:
+      ollama_model: "llama3.2"
+      confidence_threshold: 0.85
+      fallback: "anthropic"
+      anthropic_model: "claude-sonnet-4-6"
+      system_prompt_file: "prompts/prb_adr_audit.txt"
+    description: >
+      Independent second-pass ADR compliance. Does not defer to ARCH.
+      Queries ecosystem constraint_index semantically — finds constraints
+      by meaning, not just text match. Catches novel violations that
+      ARCH's deterministic check: evaluation missed.
+
+  # ── PHASE 05: CAPCOM OUTPUT ───────────────────────────────────────────────
+
+  - callsign: CAPCOM
+    name: "Capsule Communicator — Developer Output"
+    mode: deterministic
+    execution: local_deterministic
+    phase: [5]
+    required: true
+    timeout_s: 10
+    impl: internal/controller/deterministic/capcom
+    signal_type: "RELAY"
+    description: >
+      Template rendering only. Reads signals.jsonl and step-plan.json.
+      Produces: terminal output (mc watch), LANDED.md committed to mc-state,
+      and GitHub Actions step summary (when running via GitHub backend).
+      RELAY signal — never blocks, never gates. Always runs after PRB.
+
+  # ── PHASE 06: PAO DISPATCH ────────────────────────────────────────────────
+
+  - callsign: PAO
+    name: "Public Affairs Officer — FABRIC/SOCIAL Trigger"
+    mode: deterministic
+    execution: github_dispatch
+    phase: [6]
+    required: false
+    timeout_s: 30
+    impl: ".github/workflows/controllers/pao.yml"
+    signal_type: "RELAY"
+    description: >
+      Dispatched to GitHub Actions. Fires repository_dispatch event to
+      ry-ops/fabric-social with mission artifacts URL and metadata.
+      RELAY signal — non-blocking. Mission is LANDED before PAO fires.
+      PAO failure does not abort or reopen the mission.
