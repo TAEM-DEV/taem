@@ -182,6 +182,19 @@ func (r *Registry) GetController(callsign string) (ControllerDef, bool) {
 	return *c, true
 }
 
+// NewTestRegistry builds a Registry from a slice of ControllerDef without
+// loading from a YAML file. Exported for use in external integration tests.
+func NewTestRegistry(defs []ControllerDef) *Registry {
+	byCallsign := make(map[string]*ControllerDef, len(defs))
+	for i := range defs {
+		byCallsign[defs[i].Callsign] = &defs[i]
+	}
+	return &Registry{
+		Controllers: defs,
+		byCallsign:  byCallsign,
+	}
+}
+
 // ControllerMode returns the typed ControllerMode for a controller by callsign.
 func (r *Registry) ControllerMode(callsign string) (controller.ControllerMode, error) {
 	c, ok := r.byCallsign[callsign]

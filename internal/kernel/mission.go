@@ -1,25 +1,25 @@
 // internal/kernel/mission.go
 //
-// Mission lifecycle types for the TAEM kernel.
-// This file defines the Launch/Retry entry points and Mission struct.
-// Step 11 (kernel.go) will expand this with the full phase sequencer.
+// Supplementary mission lifecycle entry points for the TAEM kernel.
+// LaunchParams and RetryParams are convenience types used by cmd/taem/main.go
+// to marshal CLI flags into kernel calls.
 //
-// These types are used by cmd/taem/main.go (step 12) to wire the CLI
-// to the kernel.
+// The authoritative Mission struct, Launch(), and Run() live in kernel.go (step 11).
 
 package kernel
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/taem-dev/taem/internal/controller"
+	"github.com/taem-dev/taem/internal/dispatch"
 	"github.com/taem-dev/taem/internal/ecosystem"
 	"github.com/taem-dev/taem/internal/state"
 )
 
-// LaunchParams holds the inputs required to create a new mission.
+// LaunchParams holds the inputs required to create a new mission from the CLI.
+// Convenience wrapper around MissionConfig for the launch command.
 type LaunchParams struct {
 	Repos        []string
 	Task         string
@@ -40,56 +40,34 @@ type RetryParams struct {
 	EcosystemURL string
 }
 
-// Mission represents an active preflight mission managed by the kernel.
-// The full phase sequencer, controller dispatch, and gate evaluation
-// will be implemented in kernel.go (step 11).
-type Mission struct {
-	ID          string
-	Params      LaunchParams
-	FromPhase   int
-	mcStatePath string
-	adrsPath    string
-	registry    *Registry
-	eco         *ecosystem.EcosystemClient
+// DefaultControllerFactory is a placeholder factory that returns nil for
+// all controller definitions. In production, main.go should wire a real
+// factory. This allows LaunchFromParams to compile without requiring the
+// caller to provide a factory.
+var DefaultControllerFactory ControllerFactory = func(def ControllerDef) controller.Controller {
+	return nil
 }
 
-// Launch creates a new mission, initializes its mc-state directory,
-// and writes the MISSION_START manifest event.
-func Launch(params LaunchParams) (*Mission, error) {
-	// Create mission directory in mc-state.
-	missionID := fmt.Sprintf("M%d", time.Now().UnixNano())
-	missionDir := params.MCStatePath + "/missions/" + missionID
-
-	if err := os.MkdirAll(missionDir, 0755); err != nil {
-		return nil, fmt.Errorf("creating mission directory: %w", err)
+// LaunchFromParams creates and launches a mission from LaunchParams.
+// This is a convenience bridge for cmd/taem/main.go; it translates
+// LaunchParams into MissionConfig and calls the authoritative Launch().
+func LaunchFromParams(params LaunchParams) (*Mission, error) {
+	var ecoClient *ecosystem.EcosystemClient
+	if params.EcosystemURL != "" {
+		ecoClient = ecosystem.NewClient(params.EcosystemURL)
 	}
 
-	// Write initial manifest event.
-	phase := 0
-	ts := time.Now().UTC().Format(time.RFC3339)
-	err := state.AppendManifest(missionDir, state.ManifestEvent{
-		EventID:   fmt.Sprintf("E%d", time.Now().UnixNano()),
-		MissionID: missionID,
-		Event:     "MISSION_START",
-		Phase:     &phase,
-		Task:      params.Task,
-		Repos:     params.Repos,
-		ADRs:      params.ADRs,
-		Timestamp: ts,
+	return Launch(MissionConfig{
+		Task:              params.Task,
+		Repos:             params.Repos,
+		ADRs:              params.ADRs,
+		MCStatePath:       params.MCStatePath,
+		ADRsPath:          params.ADRsPath,
+		EcosystemURL:      params.EcosystemURL,
+		Registry:          params.Registry,
+		ControllerFactory: DefaultControllerFactory,
+		EcosystemClient:   ecoClient,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("writing MISSION_START: %w", err)
-	}
-
-	return &Mission{
-		ID:          missionID,
-		Params:      params,
-		FromPhase:   0,
-		mcStatePath: params.MCStatePath,
-		adrsPath:    params.ADRsPath,
-		registry:    params.Registry,
-		eco:         ecosystem.NewClient(params.EcosystemURL),
-	}, nil
 }
 
 // Retry creates a mission that resumes from a previously failed phase.
@@ -109,30 +87,30 @@ func Retry(params RetryParams) (*Mission, error) {
 		return nil, fmt.Errorf("writing MISSION_RETRY: %w", err)
 	}
 
-	return &Mission{
-		ID:          params.MissionID,
-		FromPhase:   params.FromPhase,
-		mcStatePath: params.MCStatePath,
-		adrsPath:    params.ADRsPath,
-		registry:    params.Registry,
-		eco:         ecosystem.NewClient(params.EcosystemURL),
-	}, nil
-}
-
-// Run executes the mission phase sequencer. It iterates through phases
-// starting from m.FromPhase, dispatching controllers and evaluating gates.
-//
-// This is a placeholder implementation. The full phase sequencer will be
-// implemented in kernel.go (step 11) with:
-//   - Per-phase controller dispatch via local.RunPhase() and github dispatch
-//   - Gate evaluation via Evaluate() after each phase
-//   - Signal and manifest persistence via state.AppendSignal/AppendManifest
-//   - Context cancellation propagation to all controllers
-func (m *Mission) Run(ctx context.Context) error {
-	// Placeholder: the full sequencer will be wired in kernel.go (step 11).
-	// For now, this validates that the mission can start.
-	if err := m.eco.Health(); err != nil {
-		return fmt.Errorf("ecosystem health check failed: %w", err)
+	var ecoClient *ecosystem.EcosystemClient
+	if params.EcosystemURL != "" {
+		ecoClient = ecosystem.NewClient(params.EcosystemURL)
 	}
-	return fmt.Errorf("kernel.go phase sequencer not yet implemented (step 11)")
+
+	// Build phases from FromPhase onward.
+	var phases []int
+	for _, p := range defaultPhases {
+		if p >= params.FromPhase {
+			phases = append(phases, p)
+		}
+	}
+
+	return &Mission{
+		ID:                params.MissionID,
+		Task:              "", // retry: task comes from original mission
+		mcStatePath:       params.MCStatePath,
+		adrsPath:          params.ADRsPath,
+		missionDir:        missionDir,
+		registry:          params.Registry,
+		controllerFactory: DefaultControllerFactory,
+		ecosystemClient:   ecoClient,
+		localDispatch:     dispatch.NewLocalDispatcher(),
+		phases:            phases,
+		remediationCycles: 0,
+	}, nil
 }
