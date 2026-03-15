@@ -226,7 +226,7 @@ func launchCmd() *cobra.Command {
 			// Launch mission via kernel.
 			// kernel.go (step 11) defines Launch() and Mission.Run().
 			// This will compile once kernel.go is merged.
-			mission, err := kernel.Launch(kernel.LaunchParams{
+			mission, err := kernel.LaunchFromParams(kernel.LaunchParams{
 				Repos:        repoList,
 				Task:         task,
 				ADRs:         adrList,
