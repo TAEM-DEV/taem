@@ -73,7 +73,7 @@ controllers:
     phase: [1]
     required: true
     timeout_s: 300
-    impl: ".github/workflows/controllers/nav.yml"
+    impl: ".github/workflows/nav.yml"
     signal_type: "GO | NO-GO | HOLD"
     description: >
       Dispatched to GitHub Actions for App token access to target repos.

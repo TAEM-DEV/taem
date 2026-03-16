@@ -372,12 +372,12 @@ func (m *Mission) dispatchGitHub(ctx context.Context, def ControllerDef, inputs 
 		return controller.Signal{}, fmt.Errorf("github dispatcher not configured for required controller %s", def.Callsign)
 	}
 
-	// Build workflow inputs.
+	// Build workflow inputs — only include inputs declared in nav.yml:
+	// mission_id, phase, repos.
 	workflowInputs := map[string]string{
-		"mission_id":   inputs.MissionID,
-		"mission_dir":  m.missionDir,
-		"phase":        fmt.Sprintf("%d", inputs.Phase),
-		"adrs_path":    inputs.ADRsPath,
+		"mission_id": inputs.MissionID,
+		"phase":      fmt.Sprintf("%d", inputs.Phase),
+		"repos":      strings.Join(m.Repos, ","),
 	}
 
 	// The impl field contains the workflow file path.
