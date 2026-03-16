@@ -6,7 +6,7 @@
 
 The **TAEM kernel** — a single Go binary that is the authoritative runtime for all preflight missions. When you run `taem`, you have the complete system. No servers, no agents, no orchestration platform required.
 
-Named after NASA Mission Control's flight controller positions, TAEM runs a structured preflight protocol with 15 autonomous controllers across 7 phases before any code is written.
+Named after NASA Mission Control's flight controller positions (Terminal Area Energy Management (TAEM), TAEM runs a structured preflight protocol with 15 autonomous controllers across 7 phases before any code is written.
 
 ## Architecture
 
