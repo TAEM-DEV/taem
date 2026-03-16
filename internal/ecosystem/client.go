@@ -48,7 +48,7 @@ func NewClient(baseURL string) *EcosystemClient {
 // Health checks whether the ecosystem service is reachable.
 // Returns nil on success, or a clear error per ADR-006 C-006-004.
 func (c *EcosystemClient) Health() error {
-	resp, err := c.httpClient.Get(c.baseURL + "/healthz")
+	resp, err := c.httpClient.Get(c.baseURL + "/health")
 	if err != nil {
 		return fmt.Errorf("ecosystem unreachable: %w", err)
 	}
@@ -105,7 +105,7 @@ func (c *EcosystemClient) SearchConstraints(query string) ([]byte, error) {
 // SearchWiringPatterns searches validated integration patterns in the
 // wiring_patterns collection. NAV and ARCH use this for pattern matching.
 func (c *EcosystemClient) SearchWiringPatterns(from, to, via string) ([]byte, error) {
-	u := c.baseURL + "/collections/wiring_patterns/search"
+	u := c.baseURL + "/api/wiring_patterns/search"
 	params := url.Values{}
 	params.Set("from", from)
 	params.Set("to", to)
@@ -123,12 +123,30 @@ func (c *EcosystemClient) SearchLessons(query string) ([]byte, error) {
 // Query is the generic query function wired into Inputs.EcosystemQuery.
 // Controllers call it with a collection name and free-text query.
 func (c *EcosystemClient) Query(collection, query string) ([]byte, error) {
+	if collection == "health" {
+		if err := c.Health(); err != nil {
+			return nil, err
+		}
+		return []byte(`{"status":"ok"}`), nil
+	}
 	return c.searchCollection(collection, query)
 }
 
 // searchCollection is the shared implementation for collection searches.
+// Routes to the correct ecosystem service API endpoints.
 func (c *EcosystemClient) searchCollection(collection, query string) ([]byte, error) {
-	u := c.baseURL + "/collections/" + collection + "/search"
+	endpointMap := map[string]string{
+		"repo_surfaces":    "/api/repo_surfaces",
+		"mission_memory":   "/api/mission_memory/search",
+		"constraint_index": "/api/constraints/search",
+		"wiring_patterns":  "/api/wiring_patterns/search",
+		"lessons_learned":  "/api/lessons/search",
+	}
+	endpoint, ok := endpointMap[collection]
+	if !ok {
+		endpoint = "/api/" + collection + "/search"
+	}
+	u := c.baseURL + endpoint
 	params := url.Values{}
 	params.Set("q", query)
 

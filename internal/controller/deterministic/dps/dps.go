@@ -58,6 +58,8 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 	evidence := []string{}
 	filesToValidate := []string{"signals.jsonl", "manifest.jsonl"}
 
+	missionDir := filepath.Dir(inputs.ManifestPath)
+
 	for _, filename := range filesToValidate {
 		select {
 		case <-ctx.Done():
@@ -65,7 +67,7 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		default:
 		}
 
-		fpath := filepath.Join(inputs.ManifestPath, filename)
+		fpath := filepath.Join(missionDir, filename)
 		data, err := os.ReadFile(fpath)
 		if err != nil {
 			if os.IsNotExist(err) {

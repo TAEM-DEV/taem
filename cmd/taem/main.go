@@ -21,6 +21,18 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/taem-dev/taem/internal/controller"
+	"github.com/taem-dev/taem/internal/controller/deterministic/arch"
+	"github.com/taem-dev/taem/internal/controller/deterministic/capcom"
+	"github.com/taem-dev/taem/internal/controller/deterministic/cds"
+	"github.com/taem-dev/taem/internal/controller/deterministic/dps"
+	"github.com/taem-dev/taem/internal/controller/deterministic/eecom"
+	"github.com/taem-dev/taem/internal/controller/deterministic/fao"
+	"github.com/taem-dev/taem/internal/controller/deterministic/gc"
+	"github.com/taem-dev/taem/internal/controller/deterministic/inco"
+	"github.com/taem-dev/taem/internal/controller/deterministic/nav"
+	"github.com/taem-dev/taem/internal/controller/deterministic/pco"
+	"github.com/taem-dev/taem/internal/controller/deterministic/trc"
+	"github.com/taem-dev/taem/internal/dispatch"
 	"github.com/taem-dev/taem/internal/kernel"
 	"github.com/taem-dev/taem/internal/state"
 	"gopkg.in/yaml.v3"
@@ -224,16 +236,23 @@ func launchCmd() *cobra.Command {
 			}()
 
 			// Launch mission via kernel.
-			// kernel.go (step 11) defines Launch() and Mission.Run().
-			// This will compile once kernel.go is merged.
-			mission, err := kernel.LaunchFromParams(kernel.LaunchParams{
-				Repos:        repoList,
-				Task:         task,
-				ADRs:         adrList,
-				Registry:     registry,
-				MCStatePath:  mcStatePath,
-				ADRsPath:     adrsPath,
-				EcosystemURL: ecosystemURL,
+			ghToken := os.Getenv("GH_TOKEN")
+			if ghToken == "" {
+				ghToken = os.Getenv("GITHUB_TOKEN")
+			}
+			appID := os.Getenv("TAEM_APP_ID")
+			githubDisp := dispatch.NewGitHubDispatcher(ghToken, appID, "TAEM-DEV", "mc-state")
+
+			mission, err := kernel.Launch(kernel.MissionConfig{
+				Repos:             repoList,
+				Task:              task,
+				ADRs:              adrList,
+				Registry:          registry,
+				MCStatePath:       mcStatePath,
+				ADRsPath:          adrsPath,
+				EcosystemURL:      ecosystemURL,
+				ControllerFactory: realControllerFactory,
+				GitHubDispatcher:  githubDisp,
 			})
 			if err != nil {
 				return fmt.Errorf("launch failed: %w", err)
@@ -723,6 +742,39 @@ func adrsCmd() *cobra.Command {
 
 			return nil
 		},
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Controller factory
+// ---------------------------------------------------------------------------
+
+func realControllerFactory(def kernel.ControllerDef) controller.Controller {
+	switch def.Callsign {
+	case "GC":
+		return gc.New()
+	case "DPS":
+		return dps.New()
+	case "EECOM":
+		return eecom.New()
+	case "FAO":
+		return fao.New()
+	case "ARCH":
+		return arch.New()
+	case "CDS":
+		return cds.New()
+	case "PCO":
+		return pco.New()
+	case "INCO":
+		return inco.New()
+	case "TRC":
+		return trc.New()
+	case "CAPCOM":
+		return capcom.New()
+	case "NAV":
+		return nav.New()
+	default:
+		return nil // inference controllers handled by local_inference path
 	}
 }
 

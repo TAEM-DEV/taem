@@ -17,6 +17,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -186,6 +187,13 @@ func Launch(cfg MissionConfig) (*Mission, error) {
 // Phase 06 (PAO): optional dispatch, RELAY.
 func (m *Mission) Run(ctx context.Context) error {
 	for _, phase := range m.phases {
+		// Pull latest from mc-state before each phase so NAV's
+		// integration-map.json and other workflow outputs are visible.
+		if err := gitPull(m.mcStatePath); err != nil {
+			// Non-fatal — log and continue. Stale data is better than abort.
+			fmt.Printf("  git sync warning (phase %d): %v\n", phase, err)
+		}
+
 		if err := ctx.Err(); err != nil {
 			return m.abort(fmt.Sprintf("context cancelled before phase %d: %v", phase, err))
 		}
@@ -390,6 +398,27 @@ func (m *Mission) dispatchGitHub(ctx context.Context, def ControllerDef, inputs 
 		signalValue = "GO"
 	}
 
+	// If NAV was dispatched, poll for integration-map.json before returning.
+	if def.Callsign == "NAV" {
+		mapPath := filepath.Join(m.missionDir, "integration-map.json")
+		fmt.Println("NAV dispatched — waiting for integration-map.json...")
+		for i := 0; i < 60; i++ {
+			select {
+			case <-ctx.Done():
+				return controller.Signal{}, ctx.Err()
+			case <-time.After(5 * time.Second):
+			}
+			if err := gitPull(m.mcStatePath); err != nil {
+				fmt.Printf("  git sync warning: %v\n", err)
+			}
+			if fileExists(mapPath) {
+				fmt.Println("  integration-map.json received.")
+				break
+			}
+			fmt.Printf("  waiting... (%ds)\n", (i+1)*5)
+		}
+	}
+
 	return controller.Signal{
 		Controller:  def.Callsign,
 		SignalValue: signalValue,
@@ -522,6 +551,22 @@ func (m *Mission) RemediationCycles() int {
 // mkdirAll creates a directory and all parents, like os.MkdirAll.
 func mkdirAll(path string) error {
 	return os.MkdirAll(path, 0755)
+}
+
+// gitPull fetches and resets the local clone to origin/main.
+// Uses fetch+reset instead of pull --rebase to handle unstaged changes gracefully.
+func gitPull(dir string) error {
+	fetch := exec.Command("git", "fetch", "origin", "main")
+	fetch.Dir = dir
+	if out, err := fetch.CombinedOutput(); err != nil {
+		return fmt.Errorf("git fetch: %w: %s", err, string(out))
+	}
+	reset := exec.Command("git", "reset", "--hard", "origin/main")
+	reset.Dir = dir
+	if out, err := reset.CombinedOutput(); err != nil {
+		return fmt.Errorf("git reset: %w: %s", err, string(out))
+	}
+	return nil
 }
 
 // fileExists returns true if the given path exists and is a regular file.

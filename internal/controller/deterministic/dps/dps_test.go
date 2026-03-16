@@ -38,7 +38,7 @@ func TestRun_HappyPath(t *testing.T) {
 	c := New()
 	inputs := controller.Inputs{
 		MissionID:    "test-mission",
-		ManifestPath: dir,
+		ManifestPath: filepath.Join(dir, "manifest.jsonl"),
 	}
 
 	sig, err := c.Run(context.Background(), inputs)
@@ -60,7 +60,7 @@ func TestRun_InvalidJSON(t *testing.T) {
 	c := New()
 	inputs := controller.Inputs{
 		MissionID:    "test-mission",
-		ManifestPath: dir,
+		ManifestPath: filepath.Join(dir, "manifest.jsonl"),
 	}
 
 	sig, err := c.Run(context.Background(), inputs)
