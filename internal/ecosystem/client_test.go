@@ -11,8 +11,8 @@ import (
 // service responds with 200.
 func TestHealth_OK(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/healthz" {
-			t.Errorf("expected path /healthz, got %s", r.URL.Path)
+		if r.URL.Path != "/health" {
+			t.Errorf("expected path /health, got %s", r.URL.Path)
 		}
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -90,8 +90,8 @@ func TestSearchLessons_PassesQuery(t *testing.T) {
 	var receivedQuery string
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/collections/lessons_learned/search" {
-			t.Errorf("expected path /collections/lessons_learned/search, got %s", r.URL.Path)
+		if r.URL.Path != "/api/lessons/search" {
+			t.Errorf("expected path /api/lessons/search, got %s", r.URL.Path)
 		}
 		receivedQuery = r.URL.Query().Get("q")
 		w.Header().Set("Content-Type", "application/json")
@@ -140,7 +140,14 @@ func TestQuery_RoutesToCorrectCollection(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			expectedPath := "/collections/" + collection + "/search"
+			endpointMap := map[string]string{
+				"repo_surfaces":    "/api/repo_surfaces",
+				"mission_memory":   "/api/mission_memory/search",
+				"constraint_index": "/api/constraints/search",
+				"wiring_patterns":  "/api/wiring_patterns/search",
+				"lessons_learned":  "/api/lessons/search",
+			}
+			expectedPath := endpointMap[collection]
 			if receivedPath != expectedPath {
 				t.Errorf("expected path %s, got %s", expectedPath, receivedPath)
 			}
@@ -172,8 +179,8 @@ func TestSearchWiringPatterns_PassesParameters(t *testing.T) {
 	var gotFrom, gotTo, gotVia string
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/collections/wiring_patterns/search" {
-			t.Errorf("expected path /collections/wiring_patterns/search, got %s", r.URL.Path)
+		if r.URL.Path != "/api/wiring_patterns/search" {
+			t.Errorf("expected path /api/wiring_patterns/search, got %s", r.URL.Path)
 		}
 		gotFrom = r.URL.Query().Get("from")
 		gotTo = r.URL.Query().Get("to")
