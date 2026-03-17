@@ -11,6 +11,8 @@
 
 OpenClaw is a personal AI assistant gateway — a single TypeScript/Node.js monorepo (9,125 files, 3,316 source `.ts` files, 74 extensions, 55 bundled skills) that connects to 22+ messaging channels (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, IRC, Teams, Matrix, LINE, etc.) and routes conversations through LLM providers. It runs as a local daemon and exposes a WebSocket/HTTP control plane.
 
+**Repo stats:** ~319K stars, ~61K forks, ~19,887 commits, 299 MB repo size, created Nov 2025. Active daily. 288 open security alerts, ~14K open issues.
+
 This is a *serious* codebase. The security engineering is well above average for open-source AI projects. The project has clearly been through real-world security pressure — the SECURITY.md alone is 22KB of battle-hardened triage policy.
 
 ---
@@ -150,8 +152,11 @@ This is a *serious* codebase. The security engineering is well above average for
 | SEC-012 | **MEDIUM** | **Skill/extension trust model.** Skills are Markdown+code bundles installed from ClawHub or workspace. The `skill-scanner.ts` performs static analysis, but skills can execute arbitrary code once installed. The `coding-agent` skill explicitly runs `claude --permission-mode bypassPermissions`. Trust is placed on the operator to curate skills. |
 | SEC-013 | **LOW** | **Canvas host binds 127.0.0.1 by default.** This is good. But `listenHost` is configurable — an operator could bind to `0.0.0.0`. The canvas serves static files from a user-controlled root, so network exposure would expose those files. |
 | SEC-014 | **LOW** | **`auth.mode="none"` is a valid configuration.** Intentional for loopback-only deployments, but misconfiguration with `--bind lan` would expose an unauthenticated gateway. The security audit system (`src/security/audit.ts`, 1,318 lines) flags this, and `openclaw doctor` surfaces it. |
+| SEC-015 | **MEDIUM** | **Deployment templates ship with `--allow-unconfigured`.** Both the Dockerfile CMD and `fly.toml` use `--allow-unconfigured`, which disables auth enforcement. The `fly.toml` compounds this with `--bind lan`, meaning the Fly.io template deploys an unauthenticated, network-exposed gateway by default. Users who deploy without reading docs get zero auth. |
+| SEC-016 | **INFO** | **288 open security alerts on the repository.** High absolute count, though expected for a project with 119 extensions and heavy third-party dependency surface. Suggests dependency-alert triage may be lagging. |
+| SEC-017 | **INFO** | **Missing credentials don't consume rate-limit attempts.** Intentional to prevent lockout from bare browser requests, but enables endpoint reconnaissance (an attacker can probe which endpoints exist without burning rate-limit budget). |
 
-**SECINSP Signal: GO** — No blocking findings. The security engineering is genuinely good.
+**SECINSP Signal: GO** — No blocking findings. The security engineering is genuinely good. SEC-015 (deployment templates) is the most actionable item.
 
 ---
 
@@ -246,6 +251,7 @@ Recommendation: ADVANCE
 | P1 | ARCH-001/002 | **Expand coverage measurement.** Remove `all: false` or at minimum include `src/gateway/auth*.ts`, `src/security/**`, `src/agents/sandbox/**` in the coverage report. These are the highest-risk surfaces and should have measured, enforced coverage. |
 | P1 | ARCH-003 | **Raise branch coverage threshold to 65%.** Branch coverage catches missed error paths and unchecked conditions — the most common source of security regressions. |
 | P1 | ARCH-004 | **SHA-pin third-party actions.** At minimum pin `useblacksmith/*` and `oven-sh/*` actions to commit SHAs. First-party `actions/*` and `docker/*` are lower risk. |
+| P1 | SEC-015 | **Remove `--allow-unconfigured` from deployment templates.** The Dockerfile CMD and `fly.toml` should require explicit auth configuration. At minimum, `fly.toml` should not combine `--allow-unconfigured` with `--bind lan`. |
 
 ### Priority 2 — Good Hygiene
 
@@ -255,6 +261,7 @@ Recommendation: ADVANCE
 | P2 | SEC-012 | **Skill installation warning.** When installing skills that contain `exec`, `spawn`, `shell`, or `bypassPermissions`, surface a clear warning to the operator. |
 | P2 | CDS-001 | **Pin actionlint version.** Align pre-commit and CI to the same version. |
 | P2 | ARCH-005 | **Add `permissions: {}` to ci.yml top level.** Opt-in to least-privilege for push events. |
+| P2 | SEC-016 | **Triage the 288 open security alerts.** Even if most are transitive dependency noise, the volume suggests alert fatigue risk. Consider a sweep to close resolved/irrelevant alerts. |
 
 ---
 
