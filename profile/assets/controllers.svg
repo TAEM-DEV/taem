@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 440">
+  <defs>
+    <linearGradient id="detGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#60A5FA;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="infGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  <rect width="780" height="440" fill="#0D1117" rx="12"/>
+  <text x="390" y="35" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" fill="#8B949E" letter-spacing="3">15 CONTROLLERS</text>
+  <!-- Deterministic section -->
+  <rect x="20" y="55" width="480" height="370" rx="8" fill="url(#detGrad)" stroke="#21262D" stroke-width="1"/>
+  <text x="260" y="78" text-anchor="middle" font-family="'SF Mono',monospace" font-size="11" fill="#60A5FA" letter-spacing="2">DETERMINISTIC -- ZERO LLM</text>
+  <!-- Controller cards - Row 1 -->
+  <g>
+    <rect x="35" y="95" width="105" height="55" rx="6" fill="#161B22" stroke="#60A5FA" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="0s" repeatCount="indefinite"/>
+    </rect>
+    <text x="87" y="115" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">GC</text>
+    <text x="87" y="130" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Ground Control</text>
+    <text x="87" y="142" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Infra Health</text>
+  </g>
+  <g>
+    <rect x="150" y="95" width="105" height="55" rx="6" fill="#161B22" stroke="#60A5FA" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="0.3s" repeatCount="indefinite"/>
+    </rect>
+    <text x="202" y="115" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">DPS</text>
+    <text x="202" y="130" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Data Processing</text>
+    <text x="202" y="142" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Schema Validation</text>
+  </g>
+  <g>
+    <rect x="265" y="95" width="105" height="55" rx="6" fill="#161B22" stroke="#60A5FA" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="0.6s" repeatCount="indefinite"/>
+    </rect>
+    <text x="317" y="115" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">EECOM</text>
+    <text x="317" y="130" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Resource Monitor</text>
+    <text x="317" y="142" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Rate Limits</text>
+  </g>
+  <g>
+    <rect x="380" y="95" width="105" height="55" rx="6" fill="#161B22" stroke="#60A5FA" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="0.9s" repeatCount="indefinite"/>
+    </rect>
+    <text x="432" y="115" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">FAO</text>
+    <text x="432" y="130" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Flight Activities</text>
+    <text x="432" y="142" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Phase Timing</text>
+  </g>
+  <!-- Row 2 -->
+  <g>
+    <rect x="35" y="165" width="105" height="55" rx="6" fill="#161B22" stroke="#60A5FA" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="1.2s" repeatCount="indefinite"/>
+    </rect>
+    <text x="87" y="185" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">NAV</text>
+    <text x="87" y="200" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Dependency Nav</text>
+    <text x="87" y="212" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Integration Map</text>
+  </g>
+  <g>
+    <rect x="150" y="165" width="105" height="55" rx="6" fill="#161B22" stroke="#818CF8" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="1.5s" repeatCount="indefinite"/>
+    </rect>
+    <text x="202" y="185" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#818CF8">ARCH</text>
+    <text x="202" y="200" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Architecture</text>
+    <text x="202" y="212" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">ADR Compliance</text>
+  </g>
+  <g>
+    <rect x="265" y="165" width="105" height="55" rx="6" fill="#161B22" stroke="#818CF8" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="1.8s" repeatCount="indefinite"/>
+    </rect>
+    <text x="317" y="185" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#818CF8">CDS</text>
+    <text x="317" y="200" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Conflict Detection</text>
+    <text x="317" y="212" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Set Intersection</text>
+  </g>
+  <g>
+    <rect x="380" y="165" width="105" height="55" rx="6" fill="#161B22" stroke="#818CF8" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="2.1s" repeatCount="indefinite"/>
+    </rect>
+    <text x="432" y="185" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#818CF8">PCO</text>
+    <text x="432" y="200" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Pattern Officer</text>
+    <text x="432" y="212" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Conformance</text>
+  </g>
+  <!-- Row 3 -->
+  <g>
+    <rect x="35" y="235" width="105" height="55" rx="6" fill="#161B22" stroke="#818CF8" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="2.4s" repeatCount="indefinite"/>
+    </rect>
+    <text x="87" y="255" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#818CF8">INCO</text>
+    <text x="87" y="270" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Integration Seq</text>
+    <text x="87" y="282" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Topo Sort</text>
+  </g>
+  <g>
+    <rect x="150" y="235" width="105" height="55" rx="6" fill="#161B22" stroke="#34D399" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="2.7s" repeatCount="indefinite"/>
+    </rect>
+    <text x="202" y="255" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#34D399">TRC</text>
+    <text x="202" y="270" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Test Readiness</text>
+    <text x="202" y="282" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Harness Check</text>
+  </g>
+  <g>
+    <rect x="265" y="235" width="105" height="55" rx="6" fill="#161B22" stroke="#34D399" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="3s" repeatCount="indefinite"/>
+    </rect>
+    <text x="317" y="255" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#34D399">CAPCOM</text>
+    <text x="317" y="270" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Communicator</text>
+    <text x="317" y="282" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Dev Output</text>
+  </g>
+  <g>
+    <rect x="380" y="235" width="105" height="55" rx="6" fill="#161B22" stroke="#34D399" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="4s" begin="3.3s" repeatCount="indefinite"/>
+    </rect>
+    <text x="432" y="255" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#34D399">PAO</text>
+    <text x="432" y="270" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Public Affairs</text>
+    <text x="432" y="282" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Dispatch</text>
+  </g>
+  <!-- Inference section -->
+  <rect x="520" y="55" width="240" height="370" rx="8" fill="url(#infGrad)" stroke="#21262D" stroke-width="1"/>
+  <text x="640" y="78" text-anchor="middle" font-family="'SF Mono',monospace" font-size="11" fill="#A78BFA" letter-spacing="2">INFERENCE</text>
+  <!-- SECINSP -->
+  <g>
+    <rect x="535" y="95" width="210" height="55" rx="6" fill="#161B22" stroke="#A78BFA" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="3s" begin="0s" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="115" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#A78BFA">SECINSP</text>
+    <text x="640" y="130" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Security Inspector</text>
+    <text x="640" y="142" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">2-pass: regex + LLM</text>
+  </g>
+  <!-- PRB header -->
+  <rect x="535" y="165" width="210" height="155" rx="6" fill="none" stroke="#C4B5FD" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+  <text x="640" y="182" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#C4B5FD" letter-spacing="1">PEER REVIEW BOARD</text>
+  <text x="640" y="194" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">2/3 majority required -- tie = NO-GO</text>
+  <!-- PRB members -->
+  <g>
+    <rect x="545" y="205" width="190" height="32" rx="5" fill="#161B22" stroke="#E879F9" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="220" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" font-weight="700" fill="#E879F9">PRB-SKP</text>
+    <text x="640" y="232" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Skeptic -- finds the kill shot</text>
+  </g>
+  <g>
+    <rect x="545" y="245" width="190" height="32" rx="5" fill="#161B22" stroke="#F472B6" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="3s" begin="1s" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="260" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" font-weight="700" fill="#F472B6">PRB-COR</text>
+    <text x="640" y="272" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">Correctness -- internal consistency</text>
+  </g>
+  <g>
+    <rect x="545" y="285" width="190" height="32" rx="5" fill="#161B22" stroke="#FB923C" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="300" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" font-weight="700" fill="#FB923C">PRB-ADR</text>
+    <text x="640" y="312" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">ADR Audit -- semantic compliance</text>
+  </g>
+  <!-- Voting animation -->
+  <g>
+    <text x="640" y="350" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#34D399">
+      <animate attributeName="fill" values="#34D399;#34D399;#34D399" dur="4s" repeatCount="indefinite"/>
+      GO
+    </text>
+    <text x="670" y="350" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#34D399">
+      GO
+    </text>
+    <text x="610" y="350" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#F87171">
+      NO-GO
+    </text>
+    <text x="640" y="365" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">2/3 majority = ADVANCE</text>
+    <rect x="580" y="338" width="120" height="32" rx="4" fill="none" stroke="#34D399" stroke-width="1" opacity="0.3">
+      <animate attributeName="opacity" values="0.1;0.4;0.1" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <!-- Signal type legend -->
+  <g transform="translate(35, 310)">
+    <text x="0" y="0" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">Signal types:</text>
+    <rect x="0" y="10" width="8" height="8" rx="2" fill="#34D399"/>
+    <text x="14" y="18" font-family="'SF Mono',monospace" font-size="8" fill="#34D399">GO</text>
+    <rect x="40" y="10" width="8" height="8" rx="2" fill="#F87171"/>
+    <text x="54" y="18" font-family="'SF Mono',monospace" font-size="8" fill="#F87171">NO-GO</text>
+    <rect x="100" y="10" width="8" height="8" rx="2" fill="#F59E0B"/>
+    <text x="114" y="18" font-family="'SF Mono',monospace" font-size="8" fill="#F59E0B">HOLD</text>
+    <rect x="155" y="10" width="8" height="8" rx="2" fill="#60A5FA"/>
+    <text x="169" y="18" font-family="'SF Mono',monospace" font-size="8" fill="#60A5FA">WARN</text>
+    <rect x="210" y="10" width="8" height="8" rx="2" fill="#8B949E"/>
+    <text x="224" y="18" font-family="'SF Mono',monospace" font-size="8" fill="#8B949E">RELAY</text>
+  </g>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="transparent"/>
+  <!-- Git branch visualization -->
+  <!-- Main branch line -->
+  <line x1="40" y1="20" x2="40" y2="100" stroke="#34D399" stroke-width="2.5" opacity="0.8"/>
+  <!-- Branch line -->
+  <path d="M 40,50 Q 60,50 70,35" fill="none" stroke="#60A5FA" stroke-width="2" opacity="0.7"/>
+  <line x1="70" y1="35" x2="70" y2="75" stroke="#60A5FA" stroke-width="2" opacity="0.7"/>
+  <path d="M 70,75 Q 60,90 40,90" fill="none" stroke="#60A5FA" stroke-width="2" opacity="0.7"/>
+  <!-- Commit dots on main -->
+  <circle cx="40" cy="25" r="5" fill="#161B22" stroke="#34D399" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="40" cy="50" r="5" fill="#161B22" stroke="#34D399" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="40" cy="75" r="5" fill="#161B22" stroke="#34D399" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="40" cy="90" r="6" fill="#34D399" stroke="#34D399" stroke-width="2">
+    <animate attributeName="r" values="5;7;5" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <!-- Branch commits -->
+  <circle cx="70" cy="40" r="4" fill="#161B22" stroke="#60A5FA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0.3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="70" cy="55" r="4" fill="#161B22" stroke="#60A5FA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0.6s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="70" cy="70" r="4" fill="#161B22" stroke="#60A5FA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0.9s" repeatCount="indefinite"/>
+  </circle>
+  <!-- Labels -->
+  <text x="90" y="43" font-family="'SF Mono',monospace" font-size="7" fill="#60A5FA">signals</text>
+  <text x="90" y="58" font-family="'SF Mono',monospace" font-size="7" fill="#60A5FA">manifest</text>
+  <text x="90" y="73" font-family="'SF Mono',monospace" font-size="7" fill="#60A5FA">artifacts</text>
+</svg>

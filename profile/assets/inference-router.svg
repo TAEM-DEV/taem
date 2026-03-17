@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300">
+  <defs>
+    <linearGradient id="ollamaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#60A5FA;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="anthropicGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  <rect width="700" height="300" fill="#0D1117" rx="12"/>
+  <text x="350" y="32" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" fill="#8B949E" letter-spacing="3">INFERENCE ROUTER</text>
+  <!-- Input -->
+  <rect x="30" y="110" width="120" height="70" rx="8" fill="#161B22" stroke="#818CF8" stroke-width="1.5"/>
+  <text x="90" y="140" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" font-weight="700" fill="#818CF8">Controller</text>
+  <text x="90" y="158" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">SECINSP / PRB</text>
+  <text x="90" y="170" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">inference call</text>
+  <!-- Arrow to check -->
+  <line x1="150" y1="145" x2="195" y2="145" stroke="#484F58" stroke-width="1.5"/>
+  <polygon points="193,140 203,145 193,150" fill="#484F58"/>
+  <!-- Animated request packet -->
+  <rect width="10" height="5" rx="2" fill="#818CF8" opacity="0.7">
+    <animate attributeName="x" values="155;190;155" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="y" values="142;142;142" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite"/>
+  </rect>
+  <!-- OLLAMA_URL check -->
+  <rect x="205" y="110" width="110" height="70" rx="8" fill="#161B22" stroke="#F59E0B" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+  </rect>
+  <text x="260" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#F59E0B">OLLAMA_URL</text>
+  <text x="260" y="152" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#F59E0B">set?</text>
+  <text x="260" y="170" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">if no -- HOLD</text>
+  <!-- HOLD output (down from check) -->
+  <line x1="260" y1="180" x2="260" y2="225" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+  <rect x="210" y="228" width="100" height="35" rx="6" fill="#161B22" stroke="#F59E0B" stroke-width="1.5" opacity="0.7"/>
+  <text x="260" y="250" text-anchor="middle" font-family="'SF Mono',monospace" font-size="11" font-weight="700" fill="#F59E0B">HOLD</text>
+  <text x="260" y="262" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">no silent fallthrough</text>
+  <!-- Arrow to Ollama -->
+  <line x1="315" y1="135" x2="365" y2="95" stroke="#60A5FA" stroke-width="1.5"/>
+  <polygon points="363,89 373,93 365,99" fill="#60A5FA"/>
+  <text x="345" y="105" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">yes</text>
+  <!-- Ollama box -->
+  <rect x="375" y="55" width="140" height="80" rx="8" fill="url(#ollamaGrad)" stroke="#60A5FA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <text x="445" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" font-weight="700" fill="#60A5FA">Ollama</text>
+  <text x="445" y="98" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#8B949E">llama3.2 -- local</text>
+  <text x="445" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#8B949E">45s timeout</text>
+  <text x="445" y="126" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#34D399">conf >= 0.85 -- GO</text>
+  <!-- Spinning indicator for Ollama -->
+  <g transform="translate(500, 70)">
+    <circle r="6" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-dasharray="8,6" opacity="0.6">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <!-- Arrow: Ollama success -> output -->
+  <line x1="515" y1="85" x2="560" y2="85" stroke="#34D399" stroke-width="1.5"/>
+  <polygon points="558,80 568,85 558,90" fill="#34D399"/>
+  <!-- Success output -->
+  <rect x="570" y="60" width="110" height="50" rx="6" fill="#161B22" stroke="#34D399" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+  </rect>
+  <text x="625" y="82" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" font-weight="700" fill="#34D399">Result</text>
+  <text x="625" y="99" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">backend: ollama</text>
+  <!-- Arrow: Ollama fail -> Anthropic -->
+  <line x1="445" y1="135" x2="445" y2="165" stroke="#F87171" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="473" y="155" font-family="'SF Mono',monospace" font-size="7" fill="#F87171">timeout or</text>
+  <text x="473" y="165" font-family="'SF Mono',monospace" font-size="7" fill="#F87171">conf &lt; 0.85</text>
+  <!-- Anthropic box -->
+  <rect x="375" y="170" width="140" height="80" rx="8" fill="url(#anthropicGrad)" stroke="#A78BFA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3.5s" repeatCount="indefinite"/>
+  </rect>
+  <text x="445" y="195" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" font-weight="700" fill="#A78BFA">Anthropic</text>
+  <text x="445" y="213" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#8B949E">claude-sonnet-4-6</text>
+  <text x="445" y="227" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#8B949E">cloud fallback</text>
+  <text x="445" y="241" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#F59E0B">fallback_used: true</text>
+  <!-- Arrow: Anthropic -> output -->
+  <line x1="515" y1="210" x2="560" y2="210" stroke="#A78BFA" stroke-width="1.5"/>
+  <polygon points="558,205 568,210 558,215" fill="#A78BFA"/>
+  <!-- Fallback output -->
+  <rect x="570" y="185" width="110" height="50" rx="6" fill="#161B22" stroke="#A78BFA" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2.5s" repeatCount="indefinite"/>
+  </rect>
+  <text x="625" y="207" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" font-weight="700" fill="#A78BFA">Result</text>
+  <text x="625" y="224" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">backend: anthropic</text>
+  <!-- InferenceMeta label -->
+  <rect x="555" y="255" width="135" height="30" rx="4" fill="#161B22" stroke="#21262D" stroke-width="1"/>
+  <text x="622" y="270" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">InferenceMeta logged:</text>
+  <text x="622" y="280" text-anchor="middle" font-family="'SF Mono',monospace" font-size="7" fill="#484F58">backend, conf, latency_ms</text>
+</svg>

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 380">
+  <defs>
+    <linearGradient id="connGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60A5FA"/>
+      <stop offset="100%" style="stop-color:#818CF8"/>
+    </linearGradient>
+    <linearGradient id="connGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60A5FA"/>
+      <stop offset="100%" style="stop-color:#34D399"/>
+    </linearGradient>
+    <filter id="repoGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="780" height="380" fill="#0D1117" rx="12"/>
+  <text x="390" y="35" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" fill="#8B949E" letter-spacing="3">REPOSITORY ARCHITECTURE</text>
+  <!-- TAEM Kernel (center) -->
+  <rect x="270" y="80" width="240" height="100" rx="10" fill="#161B22" stroke="#60A5FA" stroke-width="2" filter="url(#repoGlow)">
+    <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <text x="390" y="110" text-anchor="middle" font-family="'SF Mono',monospace" font-size="16" font-weight="700" fill="#60A5FA">taem</text>
+  <text x="390" y="130" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#8B949E">The Kernel</text>
+  <text x="390" y="148" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Gate + 15 Controllers + CLI</text>
+  <text x="390" y="162" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Single Go binary</text>
+  <!-- mc-state (left) -->
+  <rect x="30" y="250" width="200" height="100" rx="10" fill="#161B22" stroke="#34D399" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3.5s" repeatCount="indefinite"/>
+  </rect>
+  <text x="130" y="280" text-anchor="middle" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#34D399">mc-state</text>
+  <text x="130" y="300" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#8B949E">Mission State</text>
+  <text x="130" y="318" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Git-native JSONL store</text>
+  <text x="130" y="332" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">signals + manifests</text>
+  <!-- Connection: taem -> mc-state -->
+  <path d="M 310,180 Q 220,220 170,250" fill="none" stroke="url(#connGrad2)" stroke-width="1.5" stroke-dasharray="6,3">
+    <animate attributeName="stroke-dashoffset" values="0;-18" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+  <text x="210" y="210" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">read/write</text>
+  <!-- adrs (center-left) -->
+  <rect x="260" y="250" width="200" height="100" rx="10" fill="#161B22" stroke="#F59E0B" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite"/>
+  </rect>
+  <text x="360" y="280" text-anchor="middle" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#F59E0B">adrs</text>
+  <text x="360" y="300" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#8B949E">Decision Records</text>
+  <text x="360" y="318" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">7 active ADRs</text>
+  <text x="360" y="332" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">HARD constraints</text>
+  <!-- Connection: taem -> adrs -->
+  <path d="M 370,180 L 360,250" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.6">
+    <animate attributeName="stroke-dashoffset" values="0;-18" dur="2s" repeatCount="indefinite"/>
+  </path>
+  <text x="385" y="220" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">read</text>
+  <!-- ecosystem (right) -->
+  <rect x="490" y="250" width="200" height="100" rx="10" fill="#161B22" stroke="#A78BFA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3.2s" repeatCount="indefinite"/>
+  </rect>
+  <text x="590" y="280" text-anchor="middle" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#A78BFA">ecosystem</text>
+  <text x="590" y="300" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#8B949E">Knowledge Layer</text>
+  <text x="590" y="318" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Qdrant -- 5 collections</text>
+  <text x="590" y="332" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">read-only from kernel</text>
+  <!-- Connection: taem -> ecosystem -->
+  <path d="M 470,180 Q 540,220 560,250" fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.6">
+    <animate attributeName="stroke-dashoffset" values="0;-18" dur="1.8s" repeatCount="indefinite"/>
+  </path>
+  <text x="540" y="210" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">query</text>
+  <!-- Data flow particles -->
+  <!-- taem -> mc-state particle -->
+  <circle r="3" fill="#34D399" opacity="0.8">
+    <animateMotion dur="2s" repeatCount="indefinite" path="M310,180 Q220,220 170,250"/>
+    <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <!-- taem -> ecosystem particle -->
+  <circle r="3" fill="#A78BFA" opacity="0.8">
+    <animateMotion dur="2.2s" repeatCount="indefinite" path="M470,180 Q540,220 560,250"/>
+    <animate attributeName="opacity" values="0;0.8;0" dur="2.2s" repeatCount="indefinite"/>
+  </circle>
+  <!-- GitHub Actions (top right) -->
+  <rect x="580" y="80" width="170" height="80" rx="10" fill="#161B22" stroke="#484F58" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="665" y="110" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#8B949E">GitHub Actions</text>
+  <text x="665" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">NAV + PAO dispatch</text>
+  <text x="665" y="142" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Backend, not orchestrator</text>
+  <!-- Connection: taem -> GH Actions -->
+  <path d="M 510,120 L 580,120" fill="none" stroke="#484F58" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5">
+    <animate attributeName="stroke-dashoffset" values="0;-14" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+  <text x="545" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">dispatch</text>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80">
+  <defs>
+    <linearGradient id="footerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:0.6">
+        <animate attributeName="stop-color" values="#60A5FA;#818CF8;#A78BFA;#34D399;#60A5FA" dur="8s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:0.6">
+        <animate attributeName="stop-color" values="#A78BFA;#34D399;#60A5FA;#818CF8;#A78BFA" dur="8s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="80" fill="transparent"/>
+  <!-- Horizontal line -->
+  <line x1="50" y1="20" x2="350" y2="20" stroke="url(#footerGrad)" stroke-width="1.5"/>
+  <!-- Pulse on line -->
+  <circle r="3" fill="url(#footerGrad)" opacity="0.8">
+    <animate attributeName="cx" values="50;350;50" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="20;20;20" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <!-- TAEM text -->
+  <text x="200" y="55" text-anchor="middle" font-family="'SF Mono','Fira Code','JetBrains Mono',monospace" font-size="22" font-weight="700" fill="url(#footerGrad)" letter-spacing="8">TAEM</text>
+  <text x="200" y="72" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58" letter-spacing="3">MISSION CONTROL FOR CODE</text>
+</svg>

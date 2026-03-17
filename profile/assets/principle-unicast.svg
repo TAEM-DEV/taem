@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="transparent"/>
+  <!-- Central node -->
+  <circle cx="60" cy="60" r="12" fill="#161B22" stroke="#A78BFA" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <text x="60" y="64" text-anchor="middle" font-family="'SF Mono',monospace" font-size="6" font-weight="700" fill="#A78BFA">KERN</text>
+  <!-- Endpoint nodes -->
+  <circle cx="60" cy="15" r="7" fill="#161B22" stroke="#60A5FA" stroke-width="1.5"/>
+  <circle cx="100" cy="38" r="7" fill="#161B22" stroke="#34D399" stroke-width="1.5"/>
+  <circle cx="100" cy="82" r="7" fill="#161B22" stroke="#F59E0B" stroke-width="1.5"/>
+  <circle cx="60" cy="105" r="7" fill="#161B22" stroke="#F87171" stroke-width="1.5"/>
+  <circle cx="20" cy="82" r="7" fill="#161B22" stroke="#818CF8" stroke-width="1.5"/>
+  <circle cx="20" cy="38" r="7" fill="#161B22" stroke="#E879F9" stroke-width="1.5"/>
+  <!-- Unicast lines (explicit, direct connections) -->
+  <line x1="60" y1="48" x2="60" y2="22" stroke="#60A5FA" stroke-width="1.2" opacity="0.5"/>
+  <line x1="70" y1="52" x2="93" y2="42" stroke="#34D399" stroke-width="1.2" opacity="0.5"/>
+  <line x1="70" y1="68" x2="93" y2="78" stroke="#F59E0B" stroke-width="1.2" opacity="0.5"/>
+  <line x1="60" y1="72" x2="60" y2="98" stroke="#F87171" stroke-width="1.2" opacity="0.5"/>
+  <line x1="50" y1="68" x2="27" y2="78" stroke="#818CF8" stroke-width="1.2" opacity="0.5"/>
+  <line x1="50" y1="52" x2="27" y2="42" stroke="#E879F9" stroke-width="1.2" opacity="0.5"/>
+  <!-- Animated data packets on each line -->
+  <circle r="2" fill="#60A5FA">
+    <animate attributeName="cx" values="60;60;60" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="48;22;48" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="2" fill="#34D399">
+    <animate attributeName="cx" values="70;93;70" dur="2.3s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="52;42;52" dur="2.3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0" dur="2.3s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="2" fill="#F59E0B">
+    <animate attributeName="cx" values="70;93;70" dur="2.6s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="68;78;68" dur="2.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0" dur="2.6s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="2" fill="#F87171">
+    <animate attributeName="cx" values="60;60;60" dur="2.1s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="72;98;72" dur="2.1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0" dur="2.1s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="2" fill="#818CF8">
+    <animate attributeName="cx" values="50;27;50" dur="2.4s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="68;78;68" dur="2.4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0" dur="2.4s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="2" fill="#E879F9">
+    <animate attributeName="cx" values="50;27;50" dur="2.7s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="52;42;52" dur="2.7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.9;0" dur="2.7s" repeatCount="indefinite"/>
+  </circle>
+  <!-- No multicast X -->
+  <!-- Crossed out broadcast icon in corner -->
+  <g transform="translate(95, 95)" opacity="0.4">
+    <circle r="10" fill="none" stroke="#F87171" stroke-width="1"/>
+    <line x1="-7" y1="-7" x2="7" y2="7" stroke="#F87171" stroke-width="1.5"/>
+  </g>
+</svg>

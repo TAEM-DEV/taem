@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 320">
+  <defs>
+    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60A5FA"/>
+      <stop offset="50%" style="stop-color:#818CF8"/>
+      <stop offset="100%" style="stop-color:#A78BFA"/>
+    </linearGradient>
+    <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#34D399"/>
+      <stop offset="100%" style="stop-color:#60A5FA"/>
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="780" height="320" fill="#0D1117" rx="12"/>
+  <text x="390" y="35" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" fill="#8B949E" letter-spacing="3">MISSION FLOW</text>
+  <!-- Phase connection line -->
+  <line x1="60" y1="130" x2="720" y2="130" stroke="#21262D" stroke-width="2"/>
+  <!-- Animated pulse traveling the line -->
+  <circle r="4" fill="url(#pulseGrad)" filter="url(#softGlow)">
+    <animateMotion dur="5s" repeatCount="indefinite" path="M60,130 L720,130"/>
+    <animate attributeName="opacity" values="1;0.4;1" dur="5s" repeatCount="indefinite"/>
+  </circle>
+  <!-- Phase nodes -->
+  <!-- Phase 00 -->
+  <g>
+    <circle cx="60" cy="130" r="22" fill="#161B22" stroke="#60A5FA" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <text x="60" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">00</text>
+    <text x="60" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">PAD</text>
+    <text x="60" y="91" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">CHECK</text>
+    <text x="60" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GC DPS</text>
+    <text x="60" y="187" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">EECOM</text>
+  </g>
+  <!-- Phase 01 -->
+  <g>
+    <circle cx="170" cy="130" r="22" fill="#161B22" stroke="#60A5FA" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0.4s" repeatCount="indefinite"/>
+    </circle>
+    <text x="170" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#60A5FA">01</text>
+    <text x="170" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">CORPUS</text>
+    <text x="170" y="91" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">INGESTION</text>
+    <text x="170" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">NAV FAO</text>
+  </g>
+  <!-- Phase 02 -->
+  <g>
+    <circle cx="280" cy="130" r="22" fill="#161B22" stroke="#818CF8" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="280" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#818CF8">02</text>
+    <text x="280" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">ARCH</text>
+    <text x="280" y="91" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">SURVEY</text>
+    <text x="280" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">ARCH CDS</text>
+    <text x="280" y="187" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">PCO</text>
+  </g>
+  <!-- Phase 03 -->
+  <g>
+    <circle cx="390" cy="130" r="22" fill="#161B22" stroke="#818CF8" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="390" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#818CF8">03</text>
+    <text x="390" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">PLAN</text>
+    <text x="390" y="91" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">FORMULATION</text>
+    <text x="390" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">INCO</text>
+  </g>
+  <!-- Phase 04 - larger, it's the key phase -->
+  <g>
+    <circle cx="500" cy="130" r="26" fill="#161B22" stroke="#A78BFA" stroke-width="2.5">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="1.6s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="26;28;26" dur="3s" begin="1.6s" repeatCount="indefinite"/>
+    </circle>
+    <text x="500" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#A78BFA">04</text>
+    <text x="500" y="72" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#C4B5FD">PRE-CODE</text>
+    <text x="500" y="83" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#C4B5FD">INSPECTION</text>
+    <text x="500" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">SECINSP TRC</text>
+    <text x="500" y="187" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">PRB (3 votes)</text>
+  </g>
+  <!-- Phase 05 -->
+  <g>
+    <circle cx="610" cy="130" r="22" fill="#161B22" stroke="#34D399" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="610" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#34D399">05</text>
+    <text x="610" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">CAPCOM</text>
+    <text x="610" y="91" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">OUTPUT</text>
+    <text x="610" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">CAPCOM</text>
+  </g>
+  <!-- Phase 06 -->
+  <g>
+    <circle cx="720" cy="130" r="22" fill="#161B22" stroke="#34D399" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" begin="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <text x="720" y="135" text-anchor="middle" font-family="'SF Mono',monospace" font-size="12" font-weight="700" fill="#34D399">06</text>
+    <text x="720" y="80" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">PAO</text>
+    <text x="720" y="91" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#8B949E">DISPATCH</text>
+    <text x="720" y="175" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">PAO DPS</text>
+    <text x="720" y="187" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">SECINSP</text>
+  </g>
+  <!-- Zone labels -->
+  <rect x="30" y="220" width="400" height="28" rx="4" fill="#161B22" stroke="#21262D" stroke-width="1"/>
+  <text x="230" y="239" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#60A5FA">ZERO LLM CALLS  --  Phases 00-03</text>
+  <rect x="460" y="220" width="290" height="28" rx="4" fill="#161B22" stroke="#21262D" stroke-width="1"/>
+  <text x="605" y="239" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#A78BFA">INFERENCE  --  Phases 04-06</text>
+  <!-- Gate indicators -->
+  <g opacity="0.6">
+    <text x="115" y="265" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GATE</text>
+    <line x1="115" y1="270" x2="115" y2="285" stroke="#484F58" stroke-width="1"/>
+    <polygon points="110,285 120,285 115,292" fill="#484F58"/>
+  </g>
+  <g opacity="0.6">
+    <text x="225" y="265" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GATE</text>
+    <line x1="225" y1="270" x2="225" y2="285" stroke="#484F58" stroke-width="1"/>
+    <polygon points="220,285 230,285 225,292" fill="#484F58"/>
+  </g>
+  <g opacity="0.6">
+    <text x="335" y="265" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GATE</text>
+    <line x1="335" y1="270" x2="335" y2="285" stroke="#484F58" stroke-width="1"/>
+    <polygon points="330,285 340,285 335,292" fill="#484F58"/>
+  </g>
+  <g opacity="0.6">
+    <text x="445" y="265" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GATE</text>
+    <line x1="445" y1="270" x2="445" y2="285" stroke="#484F58" stroke-width="1"/>
+    <polygon points="440,285 450,285 445,292" fill="#484F58"/>
+  </g>
+  <g opacity="0.6">
+    <text x="555" y="265" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GATE</text>
+    <line x1="555" y1="270" x2="555" y2="285" stroke="#484F58" stroke-width="1"/>
+    <polygon points="550,285 560,285 555,292" fill="#484F58"/>
+  </g>
+  <g opacity="0.6">
+    <text x="665" y="265" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#484F58">GATE</text>
+    <line x1="665" y1="270" x2="665" y2="285" stroke="#484F58" stroke-width="1"/>
+    <polygon points="660,285 670,285 665,292" fill="#484F58"/>
+  </g>
+</svg>
