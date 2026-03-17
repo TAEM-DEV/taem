@@ -106,6 +106,7 @@ This is a *serious* codebase. The security engineering is well above average for
 | Docker best practices | **GO** | Multi-stage build, non-root user (`node`), SHA-pinned base images, apt cache mounts, health checks, `init: true` |
 | Pre-commit hooks | **GO** | 14 hooks: trailing-whitespace, detect-private-key, detect-secrets, shellcheck, actionlint, zizmor, oxlint, oxfmt, swiftlint, ruff |
 | Dependency auditing | **GO** | `pnpm-audit-prod` in both pre-commit and CI |
+| Supply-chain age gate | **GO** | `pnpm.minimumReleaseAge: 2880` (48 hours) — rejects packages published < 2 days ago. Excellent supply-chain defense against package takeover/typosquatting attacks. |
 | Container sandbox validation | **GO** | Blocked host paths, blocked seccomp/AppArmor profiles, network mode restrictions, bind mount boundary checking |
 | Safe binary execution | **GO** | `src/infra/exec-safe-bin-*.ts` — trusted binary path validation with policy profiles |
 
