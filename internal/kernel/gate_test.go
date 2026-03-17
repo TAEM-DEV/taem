@@ -73,6 +73,29 @@ func TestGate_PRB_MajorityNOGO_ABORT(t *testing.T) {
 	}
 }
 
+// TestGate_InferenceHold_Advances verifies that when all required controllers
+// have signaled (GO or HOLD) and none are NO-GO, the gate returns ADVANCE.
+// Inference HOLD means "ran but inconclusive" (e.g., Ollama below confidence
+// threshold), not "failed". Per ADR-005 C-005-002.
+func TestGate_InferenceHold_Advances(t *testing.T) {
+	required := []string{"SECINSP", "PRB-SKP", "PRB-COR", "PRB-ADR",
+		"DPS", "TRC", "PCO", "ARCH"}
+	signals := []controller.Signal{
+		{Controller: "SECINSP", SignalValue: "HOLD", Reason: "ollama confidence below threshold"},
+		{Controller: "PRB-SKP", SignalValue: "HOLD", Reason: "ollama confidence below threshold"},
+		{Controller: "PRB-COR", SignalValue: "HOLD", Reason: "ollama confidence below threshold"},
+		{Controller: "PRB-ADR", SignalValue: "HOLD", Reason: "ollama confidence below threshold"},
+		{Controller: "DPS", SignalValue: "GO"},
+		{Controller: "TRC", SignalValue: "GO"},
+		{Controller: "PCO", SignalValue: "GO"},
+		{Controller: "ARCH", SignalValue: "GO"},
+	}
+	decision := Evaluate(4, required, signals, 0)
+	if decision != GateADVANCE {
+		t.Errorf("expected ADVANCE when all required signals present and none NO-GO, got %v", decision)
+	}
+}
+
 // TestGate_RemediationCap_ABORT verifies that when remediation_cycles == 2
 // and any controller emits NO-GO, the gate returns ABORT (cap exceeded per ADR-003).
 func TestGate_RemediationCap_ABORT(t *testing.T) {
