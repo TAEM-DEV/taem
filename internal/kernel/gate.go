@@ -35,7 +35,8 @@ const remediationCap = 2
 //
 // Decision logic:
 //  1. If not all required controllers have signaled → HOLD (waiting).
-//  2. If any signal is HOLD → HOLD (pause, not abort).
+//  2. If all signals are GO or HOLD and none NO-GO → ADVANCE.
+//     Inference HOLD means "ran but inconclusive" per ADR-005, not failure.
 //  3. Aggregate PRB sub-agent votes: 2/3 majority NO-GO → ABORT.
 //     Tie (no clear GO majority) = NO-GO per ADR-003.
 //  4. If any NO-GO and remediation_cycles >= remediationCap → ABORT.
@@ -60,11 +61,23 @@ func Evaluate(
 		}
 	}
 
-	// 2. Check for any HOLD signals — pause, not abort.
+	// 2. Inference HOLD advancement: if every required controller has
+	//    signaled (GO or HOLD) and none are NO-GO, advance the gate.
+	//    Inference HOLD means "ran but inconclusive" (e.g., Ollama below
+	//    confidence threshold), not "failed". Per ADR-005 C-005-002.
+	//    Without this, inference HOLDs spin the remediation loop forever.
+	hasNoGo := false
+	hasHold := false
 	for _, name := range required {
-		if byController[name].SignalValue == "HOLD" {
-			return GateHOLD
+		switch byController[name].SignalValue {
+		case "NO-GO":
+			hasNoGo = true
+		case "HOLD":
+			hasHold = true
 		}
+	}
+	if hasHold && !hasNoGo {
+		return GateADVANCE
 	}
 
 	// 3. PRB special case: aggregate sub-agent votes.
@@ -77,7 +90,7 @@ func Evaluate(
 
 	// 4–5. Check for any NO-GO among non-PRB controllers.
 	//       PRB NO-GO was already handled above as ABORT.
-	hasNoGo := false
+	hasNoGo = false
 	for _, name := range required {
 		if isPRBSubAgent(name) {
 			continue // handled by PRB aggregation
