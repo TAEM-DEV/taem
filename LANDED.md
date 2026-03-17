@@ -76,7 +76,7 @@ This is a *serious* codebase. The security engineering is well above average for
 
 5. **Channel access control is well-modeled** — DM pairing codes are 8-char from a 32-char unambiguous alphabet via `crypto.randomInt()`. Max 3 pending per channel. 60-minute TTL. Group command authorization explicitly does NOT inherit DM pairing-store approvals, preventing cross-context privilege escalation.
 
-6. **Plugin SDK with strong boundaries** — 30+ SDK subpath exports (`openclaw/plugin-sdk/*`), each with separate `.d.ts` declarations. Extensions are workspace packages with isolated dependencies.
+6. **Plugin SDK with typed API surface** — 30+ SDK subpath exports (`openclaw/plugin-sdk/*`), each with separate `.d.ts` declarations. Extensions are workspace packages with isolated dependencies. Note: plugins run in-process with full capabilities (see SEC-012 — the API surface is well-typed but not capability-restricted).
 
 7. **Massive test suite** — 2,585 test files. Security audit tests alone are 3,771 lines (`src/security/audit.test.ts`).
 
@@ -150,7 +150,9 @@ This is a *serious* codebase. The security engineering is well above average for
 | ID | Severity | Finding |
 |----|----------|---------|
 | SEC-011 | **MEDIUM** | **22+ channel inbound surfaces.** Each messaging channel (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, IRC, Teams, Matrix, LINE, etc.) is an inbound attack surface. The DM pairing system and external content wrapping mitigate this, but the sheer surface area means each new channel extension is a potential bypass vector if it doesn't properly integrate the security primitives. |
-| SEC-012 | **MEDIUM** | **Skill/extension trust model.** Skills are Markdown+code bundles installed from ClawHub or workspace. The `skill-scanner.ts` performs static analysis, but skills can execute arbitrary code once installed. The `coding-agent` skill explicitly runs `claude --permission-mode bypassPermissions`. Trust is placed on the operator to curate skills. |
+| SEC-012 | **MEDIUM** | **Plugin/extension trust model — no capability restriction.** Plugins run fully in-process with the `PluginRuntimeCore` API. This grants direct access to `system.runCommandWithTimeout` (arbitrary command execution), `config.writeConfigFile` (write global config), `modelAuth.getApiKeyForModel` (resolve API keys for any provider), and `subagent.run` (spawn sessions with arbitrary messages). There is no sandboxing, no permission model, and no isolation boundary between plugins and the core runtime. A malicious or compromised extension has full host access. |
+| SEC-012b | **MEDIUM** | **Skills are unsandboxed prompt instructions.** Skills are Markdown files (`SKILL.md`) with YAML frontmatter — prompt instructions injected into LLM context. The `coding-agent` skill explicitly instructs the agent to run `codex --yolo` (no sandbox, no approvals) and `claude --permission-mode bypassPermissions`. A skill from an untrusted source could instruct the agent to execute arbitrary commands. Enforcement is at the tool-call approval level only, not at the skill level. |
+| SEC-012c | **LOW** | **Agent isolation is session-key only.** Multi-agent routing maps channels to agents via bindings, but agents share the same process, config, plugin set, and runtime. There is no memory or capability isolation between agents. The `subagent` API allows any plugin to spawn sessions on behalf of any agent. |
 | SEC-013 | **LOW** | **Canvas host binds 127.0.0.1 by default.** This is good. But `listenHost` is configurable — an operator could bind to `0.0.0.0`. The canvas serves static files from a user-controlled root, so network exposure would expose those files. |
 | SEC-014 | **LOW** | **`auth.mode="none"` is a valid configuration.** Intentional for loopback-only deployments, but misconfiguration with `--bind lan` would expose an unauthenticated gateway. The security audit system (`src/security/audit.ts`, 1,318 lines) flags this, and `openclaw doctor` surfaces it. |
 | SEC-015 | **MEDIUM** | **Deployment templates ship with `--allow-unconfigured`.** Both the Dockerfile CMD and `fly.toml` use `--allow-unconfigured`, which disables auth enforcement. The `fly.toml` compounds this with `--bind lan`, meaning the Fly.io template deploys an unauthenticated, network-exposed gateway by default. Users who deploy without reading docs get zero auth. |
@@ -259,7 +261,8 @@ Recommendation: ADVANCE
 | Priority | ID | Recommendation |
 |----------|----|----------------|
 | P2 | SEC-011 | **Channel extension security checklist.** Create a documented checklist for new channel extensions ensuring they integrate DM policy, external content wrapping, pairing, and command gating. |
-| P2 | SEC-012 | **Skill installation warning.** When installing skills that contain `exec`, `spawn`, `shell`, or `bypassPermissions`, surface a clear warning to the operator. |
+| P2 | SEC-012 | **Document the plugin trust model explicitly.** Plugins have full host access via `PluginRuntimeCore`. Surface a clear warning during extension installation, especially for third-party extensions outside the openclaw org. Consider a capability-declaration manifest for plugins. |
+| P2 | SEC-012b | **Skill installation warning.** When installing skills that contain `exec`, `spawn`, `shell`, or `bypassPermissions`, surface a clear warning to the operator. The `skill-scanner.ts` already does static analysis — extend it to flag these patterns at install time. |
 | P2 | CDS-001 | **Pin actionlint version.** Align pre-commit and CI to the same version. |
 | P2 | ARCH-005 | **Add `permissions: {}` to ci.yml top level.** Opt-in to least-privilege for push events. |
 | P2 | SEC-016 | **Triage the 288 open security alerts.** Even if most are transitive dependency noise, the volume suggests alert fatigue risk. Consider a sweep to close resolved/irrelevant alerts. |
