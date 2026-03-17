@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300">
+  <defs>
+    <filter id="glowGreen">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowYellow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowRed">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="720" height="300" fill="#0D1117" rx="12"/>
+  <text x="360" y="35" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" fill="#8B949E" letter-spacing="3">GATE STATE MACHINE</text>
+  <!-- Input signals box -->
+  <rect x="30" y="100" width="140" height="100" rx="8" fill="#161B22" stroke="#21262D" stroke-width="1.5"/>
+  <text x="100" y="125" text-anchor="middle" font-family="'SF Mono',monospace" font-size="11" fill="#8B949E">Signals[]</text>
+  <!-- Signal dots flowing in -->
+  <circle r="4" fill="#60A5FA" opacity="0.8">
+    <animate attributeName="cx" values="30;100;100" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="140;140;155" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.8;0.4" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="4" fill="#34D399" opacity="0.8">
+    <animate attributeName="cx" values="30;100;100" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="160;160;170" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.8;0.4" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="4" fill="#34D399" opacity="0.8">
+    <animate attributeName="cx" values="30;100;100" dur="2s" begin="1s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="180;180;185" dur="2s" begin="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.8;0.4" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+  <!-- Arrow from signals to gate -->
+  <line x1="170" y1="150" x2="250" y2="150" stroke="#484F58" stroke-width="1.5"/>
+  <polygon points="248,145 258,150 248,155" fill="#484F58"/>
+  <!-- Animated data packet -->
+  <rect width="12" height="6" rx="2" fill="#60A5FA" opacity="0.7">
+    <animate attributeName="x" values="175;240;175" dur="2.5s" repeatCount="indefinite"/>
+    <animate attributeName="y" values="147;147;147" dur="2.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.7;0" dur="2.5s" repeatCount="indefinite"/>
+  </rect>
+  <!-- Gate evaluator box -->
+  <rect x="260" y="80" width="200" height="140" rx="10" fill="#161B22" stroke="#818CF8" stroke-width="2">
+    <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <text x="360" y="115" text-anchor="middle" font-family="'SF Mono',monospace" font-size="13" font-weight="700" fill="#C4B5FD">Evaluate()</text>
+  <text x="360" y="140" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">phase, required[],</text>
+  <text x="360" y="155" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">signals[], rem_cycles</text>
+  <line x1="285" y1="170" x2="435" y2="170" stroke="#21262D" stroke-width="1"/>
+  <text x="360" y="190" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Pure function</text>
+  <text x="360" y="205" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Zero side effects</text>
+  <!-- Output arrows -->
+  <!-- ADVANCE -->
+  <line x1="460" y1="110" x2="540" y2="80" stroke="#34D399" stroke-width="1.5" opacity="0.7"/>
+  <polygon points="538,74 548,78 540,84" fill="#34D399" opacity="0.7"/>
+  <rect x="550" y="55" width="140" height="46" rx="8" fill="#161B22" stroke="#34D399" stroke-width="2" filter="url(#glowGreen)">
+    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+  </rect>
+  <text x="620" y="75" text-anchor="middle" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#34D399">ADVANCE</text>
+  <text x="620" y="92" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">All GO -- proceed</text>
+  <!-- HOLD -->
+  <line x1="460" y1="150" x2="540" y2="150" stroke="#F59E0B" stroke-width="1.5" opacity="0.7"/>
+  <polygon points="538,145 548,150 538,155" fill="#F59E0B" opacity="0.7"/>
+  <rect x="550" y="127" width="140" height="46" rx="8" fill="#161B22" stroke="#F59E0B" stroke-width="2" filter="url(#glowYellow)">
+    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2.5s" repeatCount="indefinite"/>
+  </rect>
+  <text x="620" y="147" text-anchor="middle" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#F59E0B">HOLD</text>
+  <text x="620" y="164" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Remediate -- retry</text>
+  <!-- ABORT -->
+  <line x1="460" y1="190" x2="540" y2="220" stroke="#F87171" stroke-width="1.5" opacity="0.7"/>
+  <polygon points="538,216 548,222 540,226" fill="#F87171" opacity="0.7"/>
+  <rect x="550" y="199" width="140" height="46" rx="8" fill="#161B22" stroke="#F87171" stroke-width="2" filter="url(#glowRed)">
+    <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <text x="620" y="219" text-anchor="middle" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#F87171">ABORT</text>
+  <text x="620" y="236" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#484F58">Unrecoverable</text>
+  <!-- HOLD loop arrow -->
+  <path d="M 620,173 L 620,265 L 360,265 L 360,220" fill="none" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+  <polygon points="355,222 365,222 360,228" fill="#F59E0B" opacity="0.4"/>
+  <text x="490" y="278" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#F59E0B" opacity="0.5">remediation cycle (max 2)</text>
+</svg>

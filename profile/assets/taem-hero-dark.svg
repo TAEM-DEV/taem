@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
+  <defs>
+    <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1">
+        <animate attributeName="stop-color" values="#60A5FA;#818CF8;#A78BFA;#60A5FA" dur="6s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1">
+        <animate attributeName="stop-color" values="#A78BFA;#60A5FA;#818CF8;#A78BFA" dur="6s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="800" height="200" fill="#0D1117" rx="12"/>
+  <!-- Stars -->
+  <g opacity="0.4">
+    <circle cx="50" cy="30" r="1.2" fill="white"><animate attributeName="opacity" values="0.2;1;0.2" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="150" cy="55" r="0.8" fill="white"><animate attributeName="opacity" values="0.4;1;0.4" dur="2.5s" repeatCount="indefinite"/></circle>
+    <circle cx="280" cy="25" r="1" fill="white"><animate attributeName="opacity" values="0.3;1;0.3" dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="420" cy="45" r="0.7" fill="white"><animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/></circle>
+    <circle cx="550" cy="20" r="1.1" fill="white"><animate attributeName="opacity" values="0.2;1;0.2" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="680" cy="40" r="0.9" fill="white"><animate attributeName="opacity" values="0.4;1;0.4" dur="2.8s" repeatCount="indefinite"/></circle>
+    <circle cx="750" cy="60" r="1" fill="white"><animate attributeName="opacity" values="0.3;1;0.3" dur="3.2s" repeatCount="indefinite"/></circle>
+    <circle cx="100" cy="160" r="0.8" fill="white"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.3s" repeatCount="indefinite"/></circle>
+    <circle cx="350" cy="170" r="1" fill="white"><animate attributeName="opacity" values="0.2;1;0.2" dur="4.2s" repeatCount="indefinite"/></circle>
+    <circle cx="620" cy="165" r="0.7" fill="white"><animate attributeName="opacity" values="0.4;1;0.4" dur="3.1s" repeatCount="indefinite"/></circle>
+  </g>
+  <!-- TAEM text -->
+  <text x="400" y="95" text-anchor="middle" font-family="'SF Mono','Fira Code','JetBrains Mono',monospace" font-size="64" font-weight="800" fill="url(#heroGrad)" filter="url(#glow)" letter-spacing="16">TAEM</text>
+  <!-- Subtitle -->
+  <text x="400" y="135" text-anchor="middle" font-family="'SF Mono','Fira Code','JetBrains Mono',monospace" font-size="14" fill="#8B949E" letter-spacing="4">TERMINAL AREA ENERGY MANAGEMENT</text>
+  <!-- Scanning line -->
+  <line x1="160" y1="160" x2="640" y2="160" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
+  <line x1="160" y1="160" x2="200" y2="160" stroke="url(#heroGrad)" stroke-width="2" opacity="0.8">
+    <animate attributeName="x1" values="160;600;160" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="x2" values="200;640;200" dur="4s" repeatCount="indefinite"/>
+  </line>
+</svg>
