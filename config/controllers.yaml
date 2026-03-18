@@ -73,7 +73,7 @@ controllers:
     phase: [1]
     required: true
     timeout_s: 300
-    impl: ".github/workflows/nav.yml"
+    impl: "nav.yml"
     signal_type: "GO | NO-GO | HOLD"
     description: >
       Dispatched to GitHub Actions for App token access to target repos.
@@ -292,7 +292,7 @@ controllers:
     phase: [6]
     required: false
     timeout_s: 30
-    impl: ".github/workflows/controllers/pao.yml"
+    impl: "controllers/pao.yml"
     signal_type: "RELAY"
     description: >
       Dispatched to GitHub Actions. Fires repository_dispatch event to
