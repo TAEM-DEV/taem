@@ -11,7 +11,7 @@
 #   github_dispatch      → kernel dispatches to GitHub Actions, waits
 
 inference_defaults:
-  ollama_model: "qwen2.5:14b"
+  ollama_model: "qwen2.5-coder:7b"
   confidence_threshold: 0.85
   timeout_s: 120
   fallback: "anthropic"
@@ -174,7 +174,7 @@ controllers:
     impl: internal/controller/inference/secinsp
     signal_type: "GO | NO-GO"
     inference:
-      ollama_model: "qwen2.5:14b"
+      ollama_model: "qwen2.5-coder:7b"
       confidence_threshold: 0.85
       fallback: "anthropic"
       anthropic_model: "claude-sonnet-4-6"
@@ -214,7 +214,7 @@ controllers:
     impl: internal/controller/inference/prb/skeptic
     signal_type: "GO | NO-GO"
     inference:
-      ollama_model: "qwen2.5:14b"
+      ollama_model: "qwen2.5-coder:7b"
       confidence_threshold: 0.85
       fallback: "anthropic"
       anthropic_model: "claude-sonnet-4-6"
@@ -235,7 +235,7 @@ controllers:
     impl: internal/controller/inference/prb/correctness
     signal_type: "GO | NO-GO"
     inference:
-      ollama_model: "qwen2.5:14b"
+      ollama_model: "qwen2.5-coder:7b"
       confidence_threshold: 0.85
       fallback: "anthropic"
       anthropic_model: "claude-sonnet-4-6"
@@ -255,7 +255,7 @@ controllers:
     impl: internal/controller/inference/prb/adr_audit
     signal_type: "GO | NO-GO"
     inference:
-      ollama_model: "qwen2.5:14b"
+      ollama_model: "qwen2.5-coder:7b"
       confidence_threshold: 0.85
       fallback: "anthropic"
       anthropic_model: "claude-sonnet-4-6"
