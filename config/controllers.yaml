@@ -13,7 +13,7 @@
 inference_defaults:
   ollama_model: "qwen2.5-coder:7b"
   confidence_threshold: 0.85
-  timeout_s: 120
+  timeout_s: 300
   fallback: "anthropic"
   anthropic_model: "claude-sonnet-4-6"
 
@@ -170,7 +170,7 @@ controllers:
     execution: local_inference
     phase: [4, 6]
     required: true
-    timeout_s: 180
+    timeout_s: 360
     impl: internal/controller/inference/secinsp
     signal_type: "GO | NO-GO"
     inference:
@@ -210,7 +210,7 @@ controllers:
     execution: local_inference
     phase: [4]
     required: true
-    timeout_s: 180
+    timeout_s: 360
     impl: internal/controller/inference/prb/skeptic
     signal_type: "GO | NO-GO"
     inference:
@@ -231,7 +231,7 @@ controllers:
     execution: local_inference
     phase: [4]
     required: true
-    timeout_s: 180
+    timeout_s: 360
     impl: internal/controller/inference/prb/correctness
     signal_type: "GO | NO-GO"
     inference:
@@ -251,7 +251,7 @@ controllers:
     execution: local_inference
     phase: [4]
     required: true
-    timeout_s: 180
+    timeout_s: 360
     impl: internal/controller/inference/prb/adr_audit
     signal_type: "GO | NO-GO"
     inference:
