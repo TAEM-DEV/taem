@@ -157,7 +157,8 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 // valid JSON or lacks a vote field, defaults to NO-GO with a parse failure reason.
 func parseVote(content string) (vote, reason string) {
 	var resp secinspResponse
-	if err := json.Unmarshal([]byte(content), &resp); err != nil {
+	cleaned := inference.ExtractJSON(content)
+	if err := json.Unmarshal([]byte(cleaned), &resp); err != nil {
 		return "NO-GO", fmt.Sprintf("failed to parse inference response as JSON: %v", err)
 	}
 
