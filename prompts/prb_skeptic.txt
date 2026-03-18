@@ -72,3 +72,14 @@ Respond ONLY with valid JSON. No preamble. No explanation outside the JSON:
   "lessons_checked": true | false,
   "prior_failures_found": "description or 'none'"
 }
+
+## Mission Type Awareness
+
+If the mission type is "review", the step plan will be empty (0 steps). This is expected.
+For review missions, evaluate:
+- Are the findings in the task description legitimate?
+- Is the proposed remediation plan sound?
+- Are there risks the remediation might introduce?
+
+Do NOT flag an empty step plan as a failure for review missions.
+For "implement" missions, evaluate the step plan as normal.

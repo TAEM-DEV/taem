@@ -189,9 +189,10 @@ func initCmd() *cobra.Command {
 
 func launchCmd() *cobra.Command {
 	var (
-		repos string
-		task  string
-		adrs  string
+		repos       string
+		task        string
+		adrs        string
+		missionType string
 	)
 
 	cmd := &cobra.Command{
@@ -202,10 +203,15 @@ func launchCmd() *cobra.Command {
 				return fmt.Errorf("--repos, --task, and --adrs are all required")
 			}
 
+			if missionType != "review" && missionType != "implement" {
+				return fmt.Errorf("--type must be 'review' or 'implement', got %q", missionType)
+			}
+
 			repoList := splitCSV(repos)
 			adrList := splitCSV(adrs)
 
 			fmt.Printf("Launching mission\n")
+			fmt.Printf("  type:  %s\n", missionType)
 			fmt.Printf("  repos: %s\n", strings.Join(repoList, ", "))
 			fmt.Printf("  task:  %s\n", task)
 			fmt.Printf("  adrs:  %s\n", strings.Join(adrList, ", "))
@@ -252,6 +258,7 @@ func launchCmd() *cobra.Command {
 				Repos:             repoList,
 				Task:              task,
 				ADRs:              adrList,
+				MissionType:       missionType,
 				Registry:          registry,
 				MCStatePath:       mcStatePath,
 				ADRsPath:          adrsPath,
@@ -279,6 +286,7 @@ func launchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&repos, "repos", "", "Comma-separated list of repos (required)")
 	cmd.Flags().StringVar(&task, "task", "", "Mission task description (required)")
 	cmd.Flags().StringVar(&adrs, "adrs", "", "Comma-separated ADR IDs to check (required)")
+	cmd.Flags().StringVar(&missionType, "type", "implement", "Mission type: review or implement")
 
 	_ = cmd.MarkFlagRequired("repos")
 	_ = cmd.MarkFlagRequired("task")

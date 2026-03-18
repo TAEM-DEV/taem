@@ -91,3 +91,13 @@ Respond ONLY with valid JSON. No preamble. No explanation outside the JSON:
     }
   ]
 }
+
+## Mission Type Awareness
+
+If the mission type is "review", the step plan will have 0 steps. This is expected.
+For review missions, evaluate:
+- Does the proposed remediation respect the ADR constraints?
+- Would the proposed fixes, if implemented, violate any ADRs?
+
+Do NOT flag an empty step plan as an ADR violation for review missions.
+For "implement" missions, evaluate ADR compliance of each step as normal.

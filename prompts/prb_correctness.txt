@@ -69,3 +69,14 @@ Respond ONLY with valid JSON. No preamble. No explanation outside the JSON:
     }
   ]
 }
+
+## Mission Type Awareness
+
+If the mission type is "review", the step plan will have 0 steps. This is correct for review missions.
+For review missions, evaluate:
+- Is the task description internally consistent?
+- Does the integration map accurately reflect the target repos?
+- Are there logical gaps in the proposed remediation?
+
+Do NOT flag missing steps or ordering as a failure for review missions.
+For "implement" missions, evaluate step completeness and ordering as normal.

@@ -52,6 +52,9 @@ type MissionConfig struct {
 
 	// Phases to execute. If nil, defaults to [0,1,2,3,4,5,6].
 	Phases []int
+
+	// MissionType is "review" or "implement". Defaults to "implement".
+	MissionType string
 }
 
 // Mission represents an active preflight mission being executed by the kernel.
@@ -71,6 +74,7 @@ type Mission struct {
 	localDispatch     *dispatch.LocalDispatcher
 	githubDispatch    *dispatch.GitHubDispatcher
 
+	missionType       string
 	phases            []int
 	remediationCycles int
 	signals           []controller.Signal
@@ -144,6 +148,11 @@ func Launch(cfg MissionConfig) (*Mission, error) {
 		phases = defaultPhases
 	}
 
+	missionType := cfg.MissionType
+	if missionType == "" {
+		missionType = "implement"
+	}
+
 	localDisp := cfg.LocalDispatcher
 	if localDisp == nil {
 		localDisp = dispatch.NewLocalDispatcher()
@@ -163,6 +172,7 @@ func Launch(cfg MissionConfig) (*Mission, error) {
 		ADRs:              cfg.ADRs,
 		mcStatePath:       cfg.MCStatePath,
 		adrsPath:          cfg.ADRsPath,
+		missionType:       missionType,
 		missionDir:        missionDir,
 		registry:          cfg.Registry,
 		controllerFactory: cfg.ControllerFactory,
@@ -485,6 +495,9 @@ func (m *Mission) buildInputs(phase int) controller.Inputs {
 		ADRsPath:     m.adrsPath,
 		Phase:        phase,
 	}
+
+	// Set mission type.
+	inputs.MissionType = m.missionType
 
 	// Check if integration-map.json exists.
 	imPath := filepath.Join(m.missionDir, "integration-map.json")

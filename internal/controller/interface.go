@@ -36,6 +36,7 @@ type Inputs struct {
 	ADRsPath       string // path to checked-out adrs/
 	EcosystemQuery func(collection, query string) ([]byte, error)
 	Phase          int
+	MissionType    string // "review" or "implement"
 }
 
 type Controller interface {

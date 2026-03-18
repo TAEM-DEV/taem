@@ -93,7 +93,8 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 	}
 
 	// Build user content.
-	userContent := fmt.Sprintf("## step-plan.json\n```json\n%s\n```\n", string(stepPlan))
+	userContent := fmt.Sprintf("## Mission Type\n%s\n\n", inputs.MissionType)
+	userContent += fmt.Sprintf("## step-plan.json\n```json\n%s\n```\n", string(stepPlan))
 
 	select {
 	case <-ctx.Done():

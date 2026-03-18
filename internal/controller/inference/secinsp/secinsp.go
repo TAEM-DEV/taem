@@ -108,7 +108,8 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 	}
 
 	// Build user content.
-	userContent := fmt.Sprintf("## step-plan.json\n```json\n%s\n```\n", string(stepPlan))
+	userContent := fmt.Sprintf("## Mission Type\n%s\n\n", inputs.MissionType)
+	userContent += fmt.Sprintf("## step-plan.json\n```json\n%s\n```\n", string(stepPlan))
 	if len(integrationMap) > 0 {
 		userContent += fmt.Sprintf("\n## integration-map.json\n```json\n%s\n```\n", string(integrationMap))
 	}
