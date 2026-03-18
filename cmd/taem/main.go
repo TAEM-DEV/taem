@@ -32,6 +32,11 @@ import (
 	"github.com/taem-dev/taem/internal/controller/deterministic/nav"
 	"github.com/taem-dev/taem/internal/controller/deterministic/pco"
 	"github.com/taem-dev/taem/internal/controller/deterministic/trc"
+	"github.com/taem-dev/taem/internal/controller/inference"
+	"github.com/taem-dev/taem/internal/controller/inference/prb/adr_audit"
+	"github.com/taem-dev/taem/internal/controller/inference/prb/correctness"
+	"github.com/taem-dev/taem/internal/controller/inference/prb/skeptic"
+	"github.com/taem-dev/taem/internal/controller/inference/secinsp"
 	"github.com/taem-dev/taem/internal/dispatch"
 	"github.com/taem-dev/taem/internal/kernel"
 	"github.com/taem-dev/taem/internal/state"
@@ -773,9 +778,65 @@ func realControllerFactory(def kernel.ControllerDef) controller.Controller {
 		return capcom.New()
 	case "NAV":
 		return nav.New()
+	case "SECINSP":
+		return secinsp.New(buildInferenceConfig(def), findPromptsDir())
+	case "PRB-SKP":
+		return skeptic.New(buildInferenceConfig(def), findPromptsDir())
+	case "PRB-COR":
+		return correctness.New(buildInferenceConfig(def), findPromptsDir())
+	case "PRB-ADR":
+		return adr_audit.New(buildInferenceConfig(def), findPromptsDir())
 	default:
-		return nil // inference controllers handled by local_inference path
+		return nil
 	}
+}
+
+// buildInferenceConfig creates an InferenceConfig from the controller definition
+// and environment variables.
+func buildInferenceConfig(def kernel.ControllerDef) inference.InferenceConfig {
+	cfg := inference.InferenceConfig{
+		OllamaURL:           os.Getenv("OLLAMA_URL"),
+		OllamaModel:         "llama3.2",
+		ConfidenceThreshold: inference.DefaultConfidenceThreshold,
+		TimeoutS:            def.TimeoutS,
+		AnthropicAPIKey:     os.Getenv("ANTHROPIC_API_KEY"),
+		AnthropicModel:      "claude-sonnet-4-6",
+	}
+	// Override from controller-level inference config if present.
+	// kernel.InferenceConfig (YAML) -> inference.InferenceConfig (router).
+	if def.Inference != nil {
+		if def.Inference.OllamaModel != "" {
+			cfg.OllamaModel = def.Inference.OllamaModel
+		}
+		if def.Inference.ConfidenceThreshold > 0 {
+			cfg.ConfidenceThreshold = def.Inference.ConfidenceThreshold
+		}
+		if def.Inference.AnthropicModel != "" {
+			cfg.AnthropicModel = def.Inference.AnthropicModel
+		}
+	}
+	// Use controller timeout for the Ollama request timeout.
+	// This ensures the Ollama call has the full controller window.
+	if cfg.TimeoutS <= 0 {
+		cfg.TimeoutS = inference.DefaultTimeoutS
+	}
+	return cfg
+}
+
+// findPromptsDir returns the path to the prompts/ directory.
+func findPromptsDir() string {
+	if _, err := os.Stat("prompts"); err == nil {
+		return "prompts"
+	}
+	exe, err := os.Executable()
+	if err == nil {
+		dir := filepath.Dir(exe)
+		candidate := filepath.Join(dir, "..", "prompts")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return "prompts"
 }
 
 // ---------------------------------------------------------------------------
