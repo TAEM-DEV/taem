@@ -72,11 +72,14 @@ Respond ONLY with valid JSON. No preamble. No explanation outside the JSON:
 
 ## Mission Type Awareness
 
-If the mission type is "review", the step plan will have 0 steps. This is correct for review missions.
-For review missions, evaluate:
-- Is the task description internally consistent?
-- Does the integration map accurately reflect the target repos?
-- Are there logical gaps in the proposed remediation?
+The "Mission Type" field at the top of the input tells you whether this is a "review" or "implement" mission.
 
-Do NOT flag missing steps or ordering as a failure for review missions.
+CRITICAL RULE FOR REVIEW MISSIONS:
+- If mission type is "review", the step plan WILL have 0 steps. This is CORRECT.
+- An empty step plan on a review mission is NOT inconsistent. Do NOT vote NO-GO for missing steps on review missions.
+- For review missions, evaluate ONLY: Is the task description internally consistent? Does the integration map accurately reflect the target repos?
+- If the review mission inputs are consistent, vote GO.
+
 For "implement" missions, evaluate step completeness and ordering as normal.
+
+Your response MUST be raw JSON only. No markdown, no code fences. Example: {"vote":"GO","reason":"Review mission inputs are consistent."}

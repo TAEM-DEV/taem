@@ -94,10 +94,14 @@ Respond ONLY with valid JSON. No preamble. No explanation outside the JSON:
 
 ## Mission Type Awareness
 
-If the mission type is "review", the step plan will have 0 steps. This is expected.
-For review missions, evaluate:
-- Does the proposed remediation respect the ADR constraints?
-- Would the proposed fixes, if implemented, violate any ADRs?
+The "Mission Type" field at the top of the input tells you whether this is a "review" or "implement" mission.
 
-Do NOT flag an empty step plan as an ADR violation for review missions.
+CRITICAL RULE FOR REVIEW MISSIONS:
+- If mission type is "review", the step plan WILL be empty. This is CORRECT and does NOT violate any ADR.
+- An empty step plan on a review mission is NOT an ADR violation. Do NOT vote NO-GO for empty steps on review missions.
+- For review missions, evaluate ONLY: Does the proposed remediation respect ADR constraints? Would the fixes, if implemented, violate any ADRs?
+- If no ADR violations are found in a review mission, vote GO.
+
 For "implement" missions, evaluate ADR compliance of each step as normal.
+
+Your response MUST be raw JSON only. No markdown, no code fences. Example: {"vote":"GO","reason":"No ADR violations found in review mission."}

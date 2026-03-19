@@ -75,11 +75,14 @@ Respond ONLY with valid JSON. No preamble. No explanation outside the JSON:
 
 ## Mission Type Awareness
 
-If the mission type is "review", the step plan will be empty (0 steps). This is expected.
-For review missions, evaluate:
-- Are the findings in the task description legitimate?
-- Is the proposed remediation plan sound?
-- Are there risks the remediation might introduce?
+The "Mission Type" field at the top of the input tells you whether this is a "review" or "implement" mission.
 
-Do NOT flag an empty step plan as a failure for review missions.
-For "implement" missions, evaluate the step plan as normal.
+CRITICAL RULE FOR REVIEW MISSIONS:
+- If mission type is "review", the step plan WILL be empty (0 steps). This is CORRECT and EXPECTED.
+- An empty step plan on a review mission is NOT a failure. Do NOT vote NO-GO for empty steps on review missions.
+- For review missions, evaluate ONLY: Are the findings legitimate? Is the remediation plan sound? Are there risks the remediation might introduce?
+- If you find no concrete failure mode in a review mission, vote GO.
+
+For "implement" missions, evaluate the step plan as normal — empty steps IS a failure.
+
+Your response MUST be raw JSON only. No markdown, no code fences, no explanation outside the JSON. Example: {"vote":"GO","reason":"No concrete failure mode identified in review mission."}

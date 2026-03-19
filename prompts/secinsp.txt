@@ -61,3 +61,5 @@ Respond ONLY with valid JSON. No preamble, no explanation outside the JSON:
   ],
   "inference_notes": "any uncertainty in your assessment worth logging"
 }
+
+Your response MUST be raw JSON only. No markdown, no code fences. Example: {"vote":"GO","reason":"No security issues identified."}
