@@ -56,7 +56,15 @@ func (c *Controller) Mode() controller.ControllerMode {
 	return controller.ModeDeterministic
 }
 
-// Run renders the LANDED.md template from signals and step-plan data.
+// integrationMapEntry represents an entry from integration-map.json.
+type integrationMapEntry struct {
+	Repo       string   `json:"repo"`
+	Languages  []string `json:"languages"`
+	EntryFiles []string `json:"entry_files"`
+}
+
+// Run renders the LANDED.md template from signals and step-plan data,
+// then generates post-land synthesis artifacts per ADR-009a Phase 3.
 //
 // Always returns a RELAY signal — non-blocking, never gates.
 func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (controller.Signal, error) {
@@ -96,14 +104,52 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		}
 	}
 
+	// Read integration-map.json if available.
+	var integrationMap []integrationMapEntry
+	if inputs.IntegrationMap != "" {
+		data, err := os.ReadFile(inputs.IntegrationMap)
+		if err == nil {
+			json.Unmarshal(data, &integrationMap)
+		}
+	}
+
 	select {
 	case <-ctx.Done():
 		return controller.Signal{}, ctx.Err()
 	default:
 	}
 
-	// Render LANDED.md content.
+	// Classify signals.
 	now := c.Now()
+	goCount := 0
+	noGoCount := 0
+	holdCount := 0
+	warnCount := 0
+	var secinspSignals []signalEntry
+	var archSignals []signalEntry
+	var prbAdrSignals []signalEntry
+	for _, sig := range signals {
+		switch sig.SignalValue {
+		case "GO":
+			goCount++
+		case "NO-GO":
+			noGoCount++
+		case "HOLD":
+			holdCount++
+		case "WARN":
+			warnCount++
+		}
+		switch sig.Controller {
+		case "SECINSP":
+			secinspSignals = append(secinspSignals, sig)
+		case "ARCH":
+			archSignals = append(archSignals, sig)
+		case "PRB-ADR":
+			prbAdrSignals = append(prbAdrSignals, sig)
+		}
+	}
+
+	// Render LANDED.md content.
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("# LANDED — Mission %s\n\n", inputs.MissionID))
 	sb.WriteString(fmt.Sprintf("**Completed:** %s\n\n", now.UTC().Format(time.RFC3339)))
@@ -111,16 +157,8 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 	sb.WriteString("## Signal Summary\n\n")
 	sb.WriteString("| Controller | Signal | Reason |\n")
 	sb.WriteString("|---|---|---|\n")
-	goCount := 0
-	noGoCount := 0
 	for _, sig := range signals {
 		sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", sig.Controller, sig.SignalValue, sig.Reason))
-		switch sig.SignalValue {
-		case "GO":
-			goCount++
-		case "NO-GO":
-			noGoCount++
-		}
 	}
 	sb.WriteString("\n")
 
@@ -136,12 +174,27 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 
 	content := sb.String()
 
+	// ADR-009a Phase 3: Generate post-land synthesis artifacts.
+	// Derive mission directory from ManifestPath.
+	synthesisCount := 0
+	if inputs.ManifestPath != "" {
+		missionDir := filepath.Dir(inputs.ManifestPath)
+		synthesisDir := filepath.Join(missionDir, "synthesis")
+		if err := os.MkdirAll(synthesisDir, 0755); err == nil {
+			synthesisCount = c.writeSynthesis(synthesisDir, inputs, signals, plan,
+				integrationMap, secinspSignals, archSignals, prbAdrSignals, now)
+		}
+	}
+
 	evidence := []string{
 		fmt.Sprintf("signals_read=%d", len(signals)),
 		fmt.Sprintf("go_signals=%d", goCount),
 		fmt.Sprintf("nogo_signals=%d", noGoCount),
+		fmt.Sprintf("hold_signals=%d", holdCount),
+		fmt.Sprintf("warn_signals=%d", warnCount),
 		fmt.Sprintf("steps=%d", len(plan.Order)),
 		fmt.Sprintf("rendered_bytes=%d", len(content)),
+		fmt.Sprintf("synthesis_artifacts=%d", synthesisCount),
 	}
 
 	return controller.Signal{
@@ -150,4 +203,264 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		Reason:      content,
 		Evidence:    evidence,
 	}, nil
+}
+
+// writeSynthesis generates post-land synthesis artifacts per ADR-009a Phase 3.
+// Returns the number of artifacts successfully written.
+//
+// Template-based (deterministic) — LLM-enhanced versions come in Phase 4.
+func (c *Controller) writeSynthesis(
+	dir string,
+	inputs controller.Inputs,
+	signals []signalEntry,
+	plan planEntry,
+	integrationMap []integrationMapEntry,
+	secinspSignals, archSignals, prbAdrSignals []signalEntry,
+	now time.Time,
+) int {
+	count := 0
+
+	// 1. blog-draft.md — mission narrative + field knowledge
+	if c.writeBlogDraft(dir, inputs, signals, plan, now) == nil {
+		count++
+	}
+
+	// 2. readme.md — step-plan + repo surfaces + integration map
+	if c.writeReadme(dir, inputs, signals, plan, integrationMap, now) == nil {
+		count++
+	}
+
+	// 3. security-report.md — SECINSP signals + CVE data
+	if c.writeSecurityReport(dir, inputs, secinspSignals, now) == nil {
+		count++
+	}
+
+	// 4. architecture-brief.md — ARCH + PRB-ADR signals + domain knowledge
+	if c.writeArchitectureBrief(dir, inputs, archSignals, prbAdrSignals, now) == nil {
+		count++
+	}
+
+	// 5. pr-description.md — step-plan citing ADRs
+	if c.writePRDescription(dir, inputs, signals, plan, now) == nil {
+		count++
+	}
+
+	return count
+}
+
+// writeBlogDraft generates synthesis/blog-draft.md.
+func (c *Controller) writeBlogDraft(
+	dir string, inputs controller.Inputs, signals []signalEntry,
+	plan planEntry, now time.Time,
+) error {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("# Mission %s — Blog Draft\n\n", inputs.MissionID))
+	sb.WriteString(fmt.Sprintf("> Auto-generated by CAPCOM post-land synthesis at %s\n\n", now.UTC().Format(time.RFC3339)))
+
+	sb.WriteString("## Mission Overview\n\n")
+	sb.WriteString(fmt.Sprintf("- **Mission ID:** %s\n", inputs.MissionID))
+	sb.WriteString(fmt.Sprintf("- **Type:** %s\n", inputs.MissionType))
+	sb.WriteString(fmt.Sprintf("- **Completed:** %s\n\n", now.UTC().Format(time.RFC3339)))
+
+	sb.WriteString("## Narrative\n\n")
+	goCount, noGoCount := countSignals(signals)
+	if noGoCount == 0 {
+		sb.WriteString("The mission completed with all controllers reporting GO. ")
+	} else {
+		sb.WriteString(fmt.Sprintf("The mission completed with %d GO and %d NO-GO signals. ", goCount, noGoCount))
+	}
+	sb.WriteString(fmt.Sprintf("A total of %d controller signals were evaluated across the mission lifecycle.\n\n", len(signals)))
+
+	if len(plan.Order) > 0 {
+		sb.WriteString("## Execution Steps\n\n")
+		for i, stepID := range plan.Order {
+			sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, stepID))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("## Key Signals\n\n")
+	for _, sig := range signals {
+		if sig.SignalValue == "NO-GO" || sig.SignalValue == "WARN" {
+			sb.WriteString(fmt.Sprintf("- **%s** (%s): %s\n", sig.Controller, sig.SignalValue, sig.Reason))
+		}
+	}
+	if noGoCount == 0 {
+		sb.WriteString("- All signals nominal.\n")
+	}
+	sb.WriteString("\n---\n*Template-based synthesis. LLM-enhanced version available in Phase 4.*\n")
+
+	return os.WriteFile(filepath.Join(dir, "blog-draft.md"), []byte(sb.String()), 0644)
+}
+
+// writeReadme generates synthesis/readme.md.
+func (c *Controller) writeReadme(
+	dir string, inputs controller.Inputs, signals []signalEntry,
+	plan planEntry, integrationMap []integrationMapEntry, now time.Time,
+) error {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("# Mission %s — README\n\n", inputs.MissionID))
+	sb.WriteString(fmt.Sprintf("> Auto-generated by CAPCOM post-land synthesis at %s\n\n", now.UTC().Format(time.RFC3339)))
+
+	if len(plan.Order) > 0 {
+		sb.WriteString("## Step Plan\n\n")
+		for i, stepID := range plan.Order {
+			sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, stepID))
+		}
+		sb.WriteString("\n")
+	}
+
+	if len(integrationMap) > 0 {
+		sb.WriteString("## Integration Map\n\n")
+		sb.WriteString("| Repo | Languages | Entry Files |\n")
+		sb.WriteString("|---|---|---|\n")
+		for _, entry := range integrationMap {
+			langs := strings.Join(entry.Languages, ", ")
+			files := strings.Join(entry.EntryFiles, ", ")
+			sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", entry.Repo, langs, files))
+		}
+		sb.WriteString("\n")
+	}
+
+	goCount, noGoCount := countSignals(signals)
+	sb.WriteString("## Signal Summary\n\n")
+	sb.WriteString(fmt.Sprintf("- GO: %d\n- NO-GO: %d\n- Total: %d\n\n", goCount, noGoCount, len(signals)))
+
+	sb.WriteString("---\n*Template-based synthesis. LLM-enhanced version available in Phase 4.*\n")
+
+	return os.WriteFile(filepath.Join(dir, "readme.md"), []byte(sb.String()), 0644)
+}
+
+// writeSecurityReport generates synthesis/security-report.md.
+func (c *Controller) writeSecurityReport(
+	dir string, inputs controller.Inputs, secinspSignals []signalEntry, now time.Time,
+) error {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("# Mission %s — Security Report\n\n", inputs.MissionID))
+	sb.WriteString(fmt.Sprintf("> Auto-generated by CAPCOM post-land synthesis at %s\n\n", now.UTC().Format(time.RFC3339)))
+
+	sb.WriteString("## SECINSP Signals\n\n")
+	if len(secinspSignals) == 0 {
+		sb.WriteString("No SECINSP signals recorded for this mission.\n\n")
+	} else {
+		sb.WriteString("| Signal | Reason | Evidence |\n")
+		sb.WriteString("|---|---|---|\n")
+		for _, sig := range secinspSignals {
+			evidence := strings.Join(sig.Evidence, "; ")
+			sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", sig.SignalValue, sig.Reason, evidence))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("## CVE Summary\n\n")
+	cveCount := 0
+	for _, sig := range secinspSignals {
+		for _, e := range sig.Evidence {
+			if strings.Contains(strings.ToUpper(e), "CVE-") {
+				cveCount++
+			}
+		}
+	}
+	if cveCount > 0 {
+		sb.WriteString(fmt.Sprintf("- CVE references found in evidence: %d\n\n", cveCount))
+	} else {
+		sb.WriteString("- No CVE references found in SECINSP evidence.\n\n")
+	}
+
+	sb.WriteString("---\n*Template-based synthesis. LLM-enhanced version available in Phase 4.*\n")
+
+	return os.WriteFile(filepath.Join(dir, "security-report.md"), []byte(sb.String()), 0644)
+}
+
+// writeArchitectureBrief generates synthesis/architecture-brief.md.
+func (c *Controller) writeArchitectureBrief(
+	dir string, inputs controller.Inputs,
+	archSignals, prbAdrSignals []signalEntry, now time.Time,
+) error {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("# Mission %s — Architecture Brief\n\n", inputs.MissionID))
+	sb.WriteString(fmt.Sprintf("> Auto-generated by CAPCOM post-land synthesis at %s\n\n", now.UTC().Format(time.RFC3339)))
+
+	sb.WriteString("## ARCH Signals\n\n")
+	if len(archSignals) == 0 {
+		sb.WriteString("No ARCH signals recorded for this mission.\n\n")
+	} else {
+		for _, sig := range archSignals {
+			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", sig.SignalValue, sig.Reason))
+			for _, e := range sig.Evidence {
+				sb.WriteString(fmt.Sprintf("  - %s\n", e))
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("## PRB-ADR Signals\n\n")
+	if len(prbAdrSignals) == 0 {
+		sb.WriteString("No PRB-ADR signals recorded for this mission.\n\n")
+	} else {
+		for _, sig := range prbAdrSignals {
+			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", sig.SignalValue, sig.Reason))
+			for _, e := range sig.Evidence {
+				sb.WriteString(fmt.Sprintf("  - %s\n", e))
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("## Domain Knowledge\n\n")
+	sb.WriteString("_Domain knowledge enrichment will be added in Phase 4 via ecosystem query._\n\n")
+
+	sb.WriteString("---\n*Template-based synthesis. LLM-enhanced version available in Phase 4.*\n")
+
+	return os.WriteFile(filepath.Join(dir, "architecture-brief.md"), []byte(sb.String()), 0644)
+}
+
+// writePRDescription generates synthesis/pr-description.md.
+func (c *Controller) writePRDescription(
+	dir string, inputs controller.Inputs, signals []signalEntry,
+	plan planEntry, now time.Time,
+) error {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("## Mission %s — PR Description\n\n", inputs.MissionID))
+
+	sb.WriteString("### Summary\n\n")
+	sb.WriteString(fmt.Sprintf("Mission type: **%s**\n\n", inputs.MissionType))
+
+	if len(plan.Order) > 0 {
+		sb.WriteString("### Step Plan\n\n")
+		for i, stepID := range plan.Order {
+			sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, stepID))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("### Controller Verdicts\n\n")
+	goCount, noGoCount := countSignals(signals)
+	sb.WriteString(fmt.Sprintf("- **GO:** %d\n", goCount))
+	sb.WriteString(fmt.Sprintf("- **NO-GO:** %d\n", noGoCount))
+	sb.WriteString(fmt.Sprintf("- **Total signals:** %d\n\n", len(signals)))
+
+	// List NO-GO signals prominently.
+	for _, sig := range signals {
+		if sig.SignalValue == "NO-GO" {
+			sb.WriteString(fmt.Sprintf("- [%s] %s\n", sig.Controller, sig.Reason))
+		}
+	}
+
+	sb.WriteString(fmt.Sprintf("\n---\n*Generated by CAPCOM at %s*\n", now.UTC().Format(time.RFC3339)))
+
+	return os.WriteFile(filepath.Join(dir, "pr-description.md"), []byte(sb.String()), 0644)
+}
+
+// countSignals returns the number of GO and NO-GO signals.
+func countSignals(signals []signalEntry) (goCount, noGoCount int) {
+	for _, sig := range signals {
+		switch sig.SignalValue {
+		case "GO":
+			goCount++
+		case "NO-GO":
+			noGoCount++
+		}
+	}
+	return
 }

@@ -15,6 +15,7 @@
 package ecosystem
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -177,4 +178,47 @@ func (c *EcosystemClient) doGet(rawURL string, params url.Values) ([]byte, error
 		return nil, fmt.Errorf("ecosystem: failed to read response body: %w", err)
 	}
 	return body, nil
+}
+
+// doPost performs an HTTP POST with a JSON body.
+// Returns a clear error if the ecosystem service is unreachable (C-006-004).
+func (c *EcosystemClient) doPost(rawURL string, payload []byte) error {
+	resp, err := c.httpClient.Post(rawURL, "application/json", bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("ecosystem unreachable: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("ecosystem: POST %s failed with status %d: %s", rawURL, resp.StatusCode, string(respBody))
+	}
+	return nil
+}
+
+// LessonRecord represents a mission lesson to be indexed into lessons_learned.
+// Per ADR-009a Phase 3: backward knowledge — mission outcomes indexed post-land.
+type LessonRecord struct {
+	MissionID   string   `json:"mission_id"`
+	Task        string   `json:"task"`
+	Repos       []string `json:"repos"`
+	GoSignals   int      `json:"go_signals"`
+	NoGoSignals int      `json:"nogo_signals"`
+	HoldSignals int      `json:"hold_signals"`
+	WarnSignals int      `json:"warn_signals"`
+	StepCount   int      `json:"step_count"`
+	DurationS   int64    `json:"duration_s"`
+	Outcome     string   `json:"outcome"`
+	KeyFindings []string `json:"key_findings"`
+	Timestamp   string   `json:"timestamp"`
+}
+
+// WriteLesson posts a lesson record to the ecosystem service for indexing
+// into the lessons_learned collection. Per ADR-009a: backward knowledge.
+func (c *EcosystemClient) WriteLesson(lesson LessonRecord) error {
+	payload, err := json.Marshal(lesson)
+	if err != nil {
+		return fmt.Errorf("ecosystem: marshal lesson: %w", err)
+	}
+	return c.doPost(c.baseURL+"/api/lessons", payload)
 }
