@@ -5,6 +5,10 @@
 // constraint_index semantically to find constraints by meaning — catching
 // novel violations that ARCH's literal pattern matching missed.
 //
+// ADR-009a Phase 2: also queries domain_knowledge for field intelligence,
+// giving PRB-ADR real constraint semantics from academic literature and
+// reference implementations.
+//
 // Uses inference.Route() for Ollama-first LLM calls per ADR-005.
 // Emits HOLD when Ollama is not configured (ErrOllamaNotConfigured).
 package adr_audit
@@ -56,11 +60,12 @@ type adrAuditResponse struct {
 // Steps:
 //  1. Read step-plan.json and integration-map.json from inputs
 //  2. Query ecosystem constraint_index via inputs.EcosystemQuery
-//  3. Load system prompt from prompts/prb_adr_audit.txt
-//  4. Construct user content with plan + integration map + constraints
-//  5. Call inference.Route()
-//  6. Handle ErrOllamaNotConfigured -> HOLD
-//  7. Parse JSON response for vote: GO/NO-GO
+//  3. Query ecosystem domain_knowledge for field intelligence (ADR-009a)
+//  4. Load system prompt from prompts/prb_adr_audit.txt
+//  5. Construct user content with plan + integration map + constraints + domain knowledge
+//  6. Call inference.Route()
+//  7. Handle ErrOllamaNotConfigured -> HOLD
+//  8. Parse JSON response for vote: GO/NO-GO
 func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (controller.Signal, error) {
 	select {
 	case <-ctx.Done():
@@ -121,6 +126,26 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		constraintIndex = "constraint_index: not available (ecosystem query not configured)"
 	}
 
+	// ADR-009a Phase 2: Query domain_knowledge for field intelligence.
+	var domainKnowledge string
+	if inputs.EcosystemQuery != nil {
+		select {
+		case <-ctx.Done():
+			return controller.Signal{}, ctx.Err()
+		default:
+		}
+
+		result, err := inputs.EcosystemQuery("domain_knowledge", string(stepPlan))
+		if err != nil {
+			// Domain knowledge query failure is non-fatal — proceed without.
+			domainKnowledge = fmt.Sprintf("domain_knowledge query failed: %v", err)
+		} else {
+			domainKnowledge = string(result)
+		}
+	} else {
+		domainKnowledge = "domain_knowledge: not available (ecosystem query not configured)"
+	}
+
 	// Load system prompt.
 	promptPath := filepath.Join(c.promptsDir, "prb_adr_audit.txt")
 	systemPrompt, err := os.ReadFile(promptPath)
@@ -128,13 +153,14 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		return controller.Signal{}, fmt.Errorf("load system prompt: %w", err)
 	}
 
-	// Build user content with all three inputs.
+	// Build user content with all inputs including domain knowledge.
 	userContent := fmt.Sprintf("## Mission Type\n%s\n\n", inputs.MissionType)
 	userContent += fmt.Sprintf("## step-plan.json\n```json\n%s\n```\n", string(stepPlan))
 	if len(integrationMap) > 0 {
 		userContent += fmt.Sprintf("\n## integration-map.json\n```json\n%s\n```\n", string(integrationMap))
 	}
 	userContent += fmt.Sprintf("\n## constraint_index\n%s\n", constraintIndex)
+	userContent += fmt.Sprintf("\n## domain_knowledge (field intelligence)\n%s\n", domainKnowledge)
 
 	select {
 	case <-ctx.Done():
