@@ -2,6 +2,8 @@ package kernel
 
 import (
 	"context"
+	"encoding/json"
+	"os"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -703,6 +705,149 @@ func hasPrefix(s, prefix string) bool {
 }
 
 // Ensure imports are used.
+
+// TestBuildSignalSummaryJSON verifies that the signal summary JSON is correct.
+func TestBuildSignalSummaryJSON(t *testing.T) {
+	m := &Mission{
+		signals: []controller.Signal{
+			{Controller: "GC", SignalValue: "GO"},
+			{Controller: "DPS", SignalValue: "GO"},
+			{Controller: "EECOM", SignalValue: "WARN"},
+			{Controller: "NAV", SignalValue: "NO-GO"},
+			{Controller: "CAPCOM", SignalValue: "RELAY"},
+		},
+	}
+
+	result := m.buildSignalSummaryJSON()
+	if result == "" {
+		t.Fatal("expected non-empty signal summary JSON")
+	}
+
+	var summary map[string]int
+	if err := json.Unmarshal([]byte(result), &summary); err != nil {
+		t.Fatalf("failed to parse signal summary: %v", err)
+	}
+
+	if summary["go"] != 2 {
+		t.Errorf("go: got %d, want 2", summary["go"])
+	}
+	if summary["no_go"] != 1 {
+		t.Errorf("no_go: got %d, want 1", summary["no_go"])
+	}
+	if summary["warn"] != 1 {
+		t.Errorf("warn: got %d, want 1", summary["warn"])
+	}
+	if summary["relay"] != 1 {
+		t.Errorf("relay: got %d, want 1", summary["relay"])
+	}
+	if summary["total"] != 5 {
+		t.Errorf("total: got %d, want 5", summary["total"])
+	}
+}
+
+// TestBuildSynthesisArtifactsJSON verifies that synthesis artifact paths are correct.
+func TestBuildSynthesisArtifactsJSON(t *testing.T) {
+	mcState := t.TempDir()
+	missionDir := mcState + "/missions/MSN-test123"
+	if err := os.MkdirAll(missionDir+"/synthesis", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	os.WriteFile(missionDir+"/synthesis/blog-draft.md", []byte("# Blog"), 0644)
+	os.WriteFile(missionDir+"/synthesis/security-report.json", []byte("{}"), 0644)
+	os.WriteFile(missionDir+"/signals.jsonl", []byte("{}"), 0644)
+	os.WriteFile(missionDir+"/manifest.jsonl", []byte("{}"), 0644)
+	os.WriteFile(missionDir+"/step-plan.json", []byte("{}"), 0644)
+
+	m := &Mission{
+		ID:         "MSN-test123",
+		missionDir: missionDir,
+	}
+
+	result := m.buildSynthesisArtifactsJSON()
+	if result == "" {
+		t.Fatal("expected non-empty synthesis artifacts JSON")
+	}
+
+	var artifacts map[string]string
+	if err := json.Unmarshal([]byte(result), &artifacts); err != nil {
+		t.Fatalf("failed to parse synthesis artifacts: %v", err)
+	}
+
+	if _, ok := artifacts["signals.jsonl"]; !ok {
+		t.Error("missing signals.jsonl in artifacts")
+	}
+	if _, ok := artifacts["manifest.jsonl"]; !ok {
+		t.Error("missing manifest.jsonl in artifacts")
+	}
+	if _, ok := artifacts["step-plan.json"]; !ok {
+		t.Error("missing step-plan.json in artifacts")
+	}
+	if _, ok := artifacts["blog-draft.md"]; !ok {
+		t.Error("missing blog-draft.md in artifacts")
+	}
+	if _, ok := artifacts["security-report.json"]; !ok {
+		t.Error("missing security-report.json in artifacts")
+	}
+
+	blogPath := artifacts["blog-draft.md"]
+	if blogPath != "missions/MSN-test123/synthesis/blog-draft.md" {
+		t.Errorf("blog-draft path: got %q, want missions/MSN-test123/synthesis/blog-draft.md", blogPath)
+	}
+}
+
+// TestPAODispatch_IncludesSynthesisData verifies PAO dispatch includes synthesis data.
+func TestPAODispatch_IncludesSynthesisData(t *testing.T) {
+	mcState := t.TempDir()
+
+	defs := []ControllerDef{
+		{Callsign: "GC", Mode: "deterministic", Execution: "local_deterministic", Phase: []int{0}, Required: true, Impl: "gc", SignalType: "GO | NO-GO"},
+		{Callsign: "PAO", Mode: "deterministic", Execution: "github_dispatch", Phase: []int{6}, Required: false, Impl: "controllers/pao.yml", SignalType: "RELAY"},
+	}
+	reg := testRegistry(defs)
+
+	mocks := map[string]*mockController{
+		"GC": {callsign: "GC", mode: controller.ModeDeterministic, signal: goSignal("GC")},
+	}
+
+	m, err := Launch(MissionConfig{
+		Task:              "PAO synthesis test",
+		Repos:             []string{"taem", "mc-state"},
+		MCStatePath:       mcState,
+		Registry:          reg,
+		ControllerFactory: testFactory(mocks),
+		Phases:            []int{0, 6},
+	})
+	if err != nil {
+		t.Fatalf("Launch: %v", err)
+	}
+
+	ctx := context.Background()
+	if err := m.Run(ctx); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	events, err := state.ReadManifest(m.MissionDir())
+	if err != nil {
+		t.Fatalf("ReadManifest: %v", err)
+	}
+	foundLanded := false
+	for _, evt := range events {
+		if evt.Event == "MISSION_LANDED" {
+			foundLanded = true
+		}
+	}
+	if !foundLanded {
+		t.Fatal("expected MISSION_LANDED")
+	}
+
+	summary := m.buildSignalSummaryJSON()
+	var sumMap map[string]int
+	json.Unmarshal([]byte(summary), &sumMap)
+	if sumMap["go"] < 1 {
+		t.Error("expected at least 1 GO signal in summary")
+	}
+}
 var (
 	_ = fmt.Sprintf
 	_ = dispatch.NewLocalDispatcher
