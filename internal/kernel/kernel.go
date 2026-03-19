@@ -15,6 +15,7 @@ package kernel
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -186,21 +187,9 @@ func Launch(cfg MissionConfig) (*Mission, error) {
 }
 
 // Run executes the full mission lifecycle through all phases.
-// It processes phases sequentially: run controllers -> evaluate gate -> advance or hold.
-//
-// Per ADR-003:
-//   - HOLD: increment remediationCycles, re-run failed phase
-//   - ABORT: set mission status to ESCALATED, halt
-//   - ADVANCE: move to next phase
-//
-// Phase 05 (CAPCOM): always RELAY, never blocks.
-// Phase 06 (PAO): optional dispatch, RELAY.
 func (m *Mission) Run(ctx context.Context) error {
 	for _, phase := range m.phases {
-		// Pull latest from mc-state before each phase so NAV's
-		// integration-map.json and other workflow outputs are visible.
 		if err := gitPull(m.mcStatePath); err != nil {
-			// Non-fatal — log and continue. Stale data is better than abort.
 			fmt.Printf("  git sync warning (phase %d): %v\n", phase, err)
 		}
 
@@ -208,7 +197,6 @@ func (m *Mission) Run(ctx context.Context) error {
 			return m.abort(fmt.Sprintf("context cancelled before phase %d: %v", phase, err))
 		}
 
-		// Write PHASE_START to manifest.
 		p := phase
 		startEvt := state.ManifestEvent{
 			EventID:   fmt.Sprintf("%s-p%02d-start", m.ID, phase),
@@ -221,13 +209,11 @@ func (m *Mission) Run(ctx context.Context) error {
 			return fmt.Errorf("kernel: write PHASE_START (phase %d): %w", phase, err)
 		}
 
-		// Execute controllers for this phase.
 		signals, err := m.runPhase(ctx, phase)
 		if err != nil {
 			return fmt.Errorf("kernel: run phase %d: %w", phase, err)
 		}
 
-		// Persist signals to state.
 		for _, sig := range signals {
 			if appendErr := state.AppendSignal(m.missionDir, sig); appendErr != nil {
 				return fmt.Errorf("kernel: append signal (%s): %w", sig.Controller, appendErr)
@@ -235,13 +221,11 @@ func (m *Mission) Run(ctx context.Context) error {
 		}
 		m.signals = append(m.signals, signals...)
 
-		// Evaluate gate for this phase.
 		decision, err := m.evaluateGate(phase)
 		if err != nil {
 			return fmt.Errorf("kernel: evaluate gate (phase %d): %w", phase, err)
 		}
 
-		// Write PHASE_COMPLETE event.
 		completeEvt := state.ManifestEvent{
 			EventID:   fmt.Sprintf("%s-p%02d-complete", m.ID, phase),
 			MissionID: m.ID,
@@ -255,15 +239,10 @@ func (m *Mission) Run(ctx context.Context) error {
 
 		switch decision {
 		case GateADVANCE:
-			// Continue to next phase.
 			continue
 
 		case GateHOLD:
-			// Increment remediation cycles and re-run this phase.
 			m.remediationCycles++
-
-			// Re-evaluate: run phase again, then check gate again.
-			// Loop until we get ADVANCE or ABORT.
 			for decision == GateHOLD {
 				if err := ctx.Err(); err != nil {
 					return m.abort(fmt.Sprintf("context cancelled during remediation of phase %d: %v", phase, err))
@@ -294,31 +273,24 @@ func (m *Mission) Run(ctx context.Context) error {
 			if decision == GateABORT {
 				return m.abort(fmt.Sprintf("gate ABORT at phase %d after %d remediation cycles", phase, m.remediationCycles))
 			}
-			// ADVANCE: continue to next phase.
 
 		case GateABORT:
 			return m.abort(fmt.Sprintf("gate ABORT at phase %d", phase))
 		}
 	}
 
-	// All phases complete — mission LANDED.
 	return m.close("LANDED")
 }
 
 // runPhase executes all controllers for a given phase.
-// It distinguishes execution mode per controller definition:
-//   - local_deterministic, local_inference -> LocalDispatcher
-//   - github_dispatch -> GitHubDispatcher
 func (m *Mission) runPhase(ctx context.Context, phase int) ([]controller.Signal, error) {
 	defs := m.registry.ControllersForPhase(phase)
 	if len(defs) == 0 {
 		return nil, nil
 	}
 
-	// Build the Inputs struct for this phase.
 	inputs := m.buildInputs(phase)
 
-	// Separate controllers by execution mode.
 	var localControllers []controller.Controller
 	var githubDefs []ControllerDef
 
@@ -327,7 +299,6 @@ func (m *Mission) runPhase(ctx context.Context, phase int) ([]controller.Signal,
 		case "github_dispatch":
 			githubDefs = append(githubDefs, def)
 		default:
-			// local_deterministic and local_inference both run locally.
 			ctrl := m.controllerFactory(def)
 			if ctrl != nil {
 				localControllers = append(localControllers, ctrl)
@@ -337,7 +308,6 @@ func (m *Mission) runPhase(ctx context.Context, phase int) ([]controller.Signal,
 
 	var allSignals []controller.Signal
 
-	// Run local controllers via LocalDispatcher.
 	if len(localControllers) > 0 {
 		signals, err := m.localDispatch.RunPhase(ctx, localControllers, inputs)
 		if err != nil {
@@ -346,11 +316,9 @@ func (m *Mission) runPhase(ctx context.Context, phase int) ([]controller.Signal,
 		allSignals = append(allSignals, signals...)
 	}
 
-	// Run github_dispatch controllers.
 	for _, def := range githubDefs {
 		sig, err := m.dispatchGitHub(ctx, def, inputs)
 		if err != nil {
-			// GitHub dispatch failure -> NO-GO signal.
 			allSignals = append(allSignals, controller.Signal{
 				Controller:  def.Callsign,
 				SignalValue: "NO-GO",
@@ -369,8 +337,6 @@ func (m *Mission) runPhase(ctx context.Context, phase int) ([]controller.Signal,
 // translates the result into a Signal.
 func (m *Mission) dispatchGitHub(ctx context.Context, def ControllerDef, inputs controller.Inputs) (controller.Signal, error) {
 	if m.githubDispatch == nil {
-		// No GitHub dispatcher configured — emit RELAY for optional controllers,
-		// NO-GO for required ones.
 		if !def.Required {
 			return controller.Signal{
 				Controller:  def.Callsign,
@@ -382,33 +348,32 @@ func (m *Mission) dispatchGitHub(ctx context.Context, def ControllerDef, inputs 
 		return controller.Signal{}, fmt.Errorf("github dispatcher not configured for required controller %s", def.Callsign)
 	}
 
-	// Build workflow inputs — only include inputs declared in nav.yml:
-	// mission_id, phase, repos.
+	// Build workflow inputs.
 	workflowInputs := map[string]string{
 		"mission_id": inputs.MissionID,
 		"phase":      fmt.Sprintf("%d", inputs.Phase),
 		"repos":      strings.Join(m.Repos, ","),
 	}
 
-	// The impl field contains the workflow file path.
+	// PAO dispatch: include synthesis data per ADR-009a Phase 4.
+	if def.Callsign == "PAO" {
+		workflowInputs["task"] = m.Task
+		workflowInputs["signal_summary"] = m.buildSignalSummaryJSON()
+		workflowInputs["synthesis_artifacts"] = m.buildSynthesisArtifactsJSON()
+	}
+
 	workflowFile := def.Impl
-	// Strip leading path separators and quotes.
 	workflowFile = strings.Trim(workflowFile, "\"'")
 
 	if err := m.githubDispatch.Dispatch(ctx, workflowFile, workflowInputs); err != nil {
 		return controller.Signal{}, fmt.Errorf("dispatch %s: %w", def.Callsign, err)
 	}
 
-	// For now, after dispatch, we generate a GO/RELAY signal.
-	// In a full implementation, WaitForRun would poll for completion.
-	// Since we don't have the run ID from dispatch (GitHub's 204 response
-	// doesn't return it), we emit RELAY for the dispatch acknowledgment.
 	signalValue := "RELAY"
 	if def.Required {
 		signalValue = "GO"
 	}
 
-	// If NAV was dispatched, poll for integration-map.json before returning.
 	if def.Callsign == "NAV" {
 		mapPath := filepath.Join(m.missionDir, "integration-map.json")
 		fmt.Println("NAV dispatched — waiting for integration-map.json...")
@@ -437,24 +402,20 @@ func (m *Mission) dispatchGitHub(ctx context.Context, def ControllerDef, inputs 
 	}, nil
 }
 
-// evaluateGate calls gate.Evaluate with the required callsigns for the phase
-// and the current set of phase signals.
+// evaluateGate calls gate.Evaluate with the required callsigns for the phase.
 func (m *Mission) evaluateGate(phase int) (GateDecision, error) {
 	required := m.registry.RequiredCallsignsForPhase(phase)
 
-	// If no required controllers, auto-ADVANCE (e.g., CAPCOM phase is RELAY).
 	if len(required) == 0 {
 		return GateADVANCE, nil
 	}
 
-	// Collect only signals relevant to controllers in this phase.
 	phaseDefs := m.registry.ControllersForPhase(phase)
 	phaseCallsigns := make(map[string]bool, len(phaseDefs))
 	for _, d := range phaseDefs {
 		phaseCallsigns[d.Callsign] = true
 	}
 
-	// Use the most recent signal for each controller in this phase.
 	latestByController := make(map[string]controller.Signal)
 	for _, sig := range m.signals {
 		if phaseCallsigns[sig.Controller] {
@@ -467,7 +428,6 @@ func (m *Mission) evaluateGate(phase int) (GateDecision, error) {
 		phaseSignals = append(phaseSignals, sig)
 	}
 
-	// Check if CAPCOM or PAO phase — these use RELAY signals, never block.
 	allRelay := true
 	for _, cs := range required {
 		def, ok := m.registry.GetController(cs)
@@ -496,22 +456,18 @@ func (m *Mission) buildInputs(phase int) controller.Inputs {
 		Phase:        phase,
 	}
 
-	// Set mission type.
 	inputs.MissionType = m.missionType
 
-	// Check if integration-map.json exists.
 	imPath := filepath.Join(m.missionDir, "integration-map.json")
 	if fileExists(imPath) {
 		inputs.IntegrationMap = imPath
 	}
 
-	// Check if step-plan.json exists.
 	spPath := filepath.Join(m.missionDir, "step-plan.json")
 	if fileExists(spPath) {
 		inputs.StepPlan = spPath
 	}
 
-	// Wire ecosystem query function.
 	if m.ecosystemClient != nil {
 		inputs.EcosystemQuery = m.ecosystemClient.Query
 	}
@@ -527,24 +483,161 @@ func (m *Mission) abort(reason string) error {
 		Event:     "MISSION_ESCALATED",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
-	// Best-effort write — don't mask the original abort reason.
 	_ = state.AppendManifest(m.missionDir, evt)
 	return fmt.Errorf("mission %s ESCALATED: %s", m.ID, reason)
 }
 
-// close writes MISSION_LANDED to manifest and updates the mission index.
+// close writes MISSION_LANDED to manifest, indexes lessons_learned to
+// ecosystem, and completes the mission lifecycle per ADR-009a.
 func (m *Mission) close(outcome string) error {
+	now := time.Now().UTC()
+
 	evt := state.ManifestEvent{
 		EventID:   m.ID + "-landed",
 		MissionID: m.ID,
 		Event:     "MISSION_LANDED",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Timestamp: now.Format(time.RFC3339),
 	}
 	if err := state.AppendManifest(m.missionDir, evt); err != nil {
 		return fmt.Errorf("kernel: write MISSION_LANDED: %w", err)
 	}
 
+	// ADR-009a: index mission outcomes into lessons_learned.
+	if m.ecosystemClient != nil {
+		m.indexLessonsLearned(now)
+	}
+
 	return nil
+}
+
+// indexLessonsLearned writes mission outcomes to the ecosystem lessons_learned
+// collection. Per ADR-009a: backward knowledge.
+func (m *Mission) indexLessonsLearned(endTime time.Time) {
+	goCount, noGoCount, holdCount, warnCount := 0, 0, 0, 0
+	var findings []string
+	for _, sig := range m.signals {
+		switch sig.SignalValue {
+		case "GO":
+			goCount++
+		case "NO-GO":
+			noGoCount++
+			findings = append(findings, fmt.Sprintf("[%s] %s", sig.Controller, sig.Reason))
+		case "HOLD":
+			holdCount++
+		case "WARN":
+			warnCount++
+			findings = append(findings, fmt.Sprintf("[%s] WARN: %s", sig.Controller, sig.Reason))
+		}
+	}
+
+	events, _ := state.ReadManifest(m.missionDir)
+	var durationS int64
+	if len(events) >= 2 {
+		first, _ := time.Parse(time.RFC3339, events[0].Timestamp)
+		if !first.IsZero() {
+			durationS = int64(endTime.Sub(first).Seconds())
+		}
+	}
+
+	stepCount := 0
+	spPath := filepath.Join(m.missionDir, "step-plan.json")
+	if fileExists(spPath) {
+		if data, err := os.ReadFile(spPath); err == nil {
+			var plan struct {
+				Order []string `json:"order"`
+			}
+			if json.Unmarshal(data, &plan) == nil {
+				stepCount = len(plan.Order)
+			}
+		}
+	}
+
+	lesson := ecosystem.LessonRecord{
+		MissionID:   m.ID,
+		Task:        m.Task,
+		Repos:       m.Repos,
+		GoSignals:   goCount,
+		NoGoSignals: noGoCount,
+		HoldSignals: holdCount,
+		WarnSignals: warnCount,
+		StepCount:   stepCount,
+		DurationS:   durationS,
+		Outcome:     "LANDED",
+		KeyFindings: findings,
+		Timestamp:   endTime.Format(time.RFC3339),
+	}
+
+	if err := m.ecosystemClient.WriteLesson(lesson); err != nil {
+		fmt.Printf("  warning: failed to index lessons_learned: %v\n", err)
+	} else {
+		fmt.Printf("  lessons_learned indexed for mission %s\n", m.ID)
+	}
+}
+
+// buildSignalSummaryJSON returns a JSON string summarizing all mission signals.
+// Used by PAO dispatch to include signal counts in the fabric-social payload.
+func (m *Mission) buildSignalSummaryJSON() string {
+	goCount, noGoCount, holdCount, warnCount, relayCount := 0, 0, 0, 0, 0
+	for _, sig := range m.signals {
+		switch sig.SignalValue {
+		case "GO":
+			goCount++
+		case "NO-GO":
+			noGoCount++
+		case "HOLD":
+			holdCount++
+		case "WARN":
+			warnCount++
+		case "RELAY":
+			relayCount++
+		}
+	}
+
+	summary := map[string]int{
+		"go":    goCount,
+		"no_go": noGoCount,
+		"hold":  holdCount,
+		"warn":  warnCount,
+		"relay": relayCount,
+		"total": len(m.signals),
+	}
+	data, _ := json.Marshal(summary)
+	return string(data)
+}
+
+// buildSynthesisArtifactsJSON returns a JSON string listing paths to synthesis
+// artifacts in the mc-state mission directory. Per ADR-009a Phase 4.
+func (m *Mission) buildSynthesisArtifactsJSON() string {
+	relBase := fmt.Sprintf("missions/%s", m.ID)
+
+	artifacts := make(map[string]string)
+
+	synthDir := filepath.Join(m.missionDir, "synthesis")
+	if info, err := os.Stat(synthDir); err == nil && info.IsDir() {
+		entries, err := os.ReadDir(synthDir)
+		if err == nil {
+			for _, entry := range entries {
+				if !entry.IsDir() {
+					name := entry.Name()
+					artifacts[name] = relBase + "/synthesis/" + name
+				}
+			}
+		}
+	}
+
+	artifacts["signals.jsonl"] = relBase + "/signals.jsonl"
+	artifacts["manifest.jsonl"] = relBase + "/manifest.jsonl"
+
+	if fileExists(filepath.Join(m.missionDir, "step-plan.json")) {
+		artifacts["step-plan.json"] = relBase + "/step-plan.json"
+	}
+
+	if fileExists(filepath.Join(m.missionDir, "integration-map.json")) {
+		artifacts["integration-map.json"] = relBase + "/integration-map.json"
+	}
+
+	data, _ := json.Marshal(artifacts)
+	return string(data)
 }
 
 // MissionDir returns the filesystem path to this mission's directory
@@ -561,13 +654,10 @@ func (m *Mission) RemediationCycles() int {
 
 // --- internal helpers ---
 
-// mkdirAll creates a directory and all parents, like os.MkdirAll.
 func mkdirAll(path string) error {
 	return os.MkdirAll(path, 0755)
 }
 
-// gitPull fetches and resets the local clone to origin/main.
-// Uses fetch+reset instead of pull --rebase to handle unstaged changes gracefully.
 func gitPull(dir string) error {
 	fetch := exec.Command("git", "fetch", "origin", "main")
 	fetch.Dir = dir
@@ -582,7 +672,6 @@ func gitPull(dir string) error {
 	return nil
 }
 
-// fileExists returns true if the given path exists and is a regular file.
 func fileExists(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
