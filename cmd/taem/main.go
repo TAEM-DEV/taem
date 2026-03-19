@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -23,6 +24,7 @@ import (
 	"github.com/taem-dev/taem/internal/controller"
 	"github.com/taem-dev/taem/internal/controller/deterministic/arch"
 	"github.com/taem-dev/taem/internal/controller/deterministic/capcom"
+	"github.com/taem-dev/taem/internal/ecosystem"
 	"github.com/taem-dev/taem/internal/controller/deterministic/cds"
 	"github.com/taem-dev/taem/internal/controller/deterministic/dps"
 	"github.com/taem-dev/taem/internal/controller/deterministic/eecom"
@@ -71,6 +73,7 @@ func rootCmd() *cobra.Command {
 		retryCmd(),
 		logCmd(),
 		adrsCmd(),
+		knowledgeCmd(),
 	)
 
 	return root
@@ -756,6 +759,145 @@ func adrsCmd() *cobra.Command {
 			return nil
 		},
 	}
+}
+
+// ---------------------------------------------------------------------------
+// taem knowledge
+// ---------------------------------------------------------------------------
+
+func knowledgeCmd() *cobra.Command {
+	var (
+		task     string
+		output   string
+		domain   string
+		force    bool
+		annotate bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "knowledge",
+		Short: "Query ecosystem knowledge (ADR-009a Phase 3)",
+		Long: `Query the ecosystem service for domain knowledge and lessons learned.
+
+Per C-009-006: operates independently of an active mission.
+Does NOT require TAEM_MC_STATE_PATH.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ecosystemURL := os.Getenv("TAEM_ECOSYSTEM_URL")
+			if ecosystemURL == "" {
+				return fmt.Errorf("TAEM_ECOSYSTEM_URL is not set — run 'taem init' first")
+			}
+
+			client := ecosystem.NewClient(ecosystemURL)
+
+			// Health check first.
+			if err := client.Health(); err != nil {
+				return fmt.Errorf("ecosystem health check failed: %w", err)
+			}
+
+			fmt.Println("TAEM Knowledge Query")
+			fmt.Println(strings.Repeat("=", 60))
+			fmt.Printf("  task:   %s\n", task)
+			fmt.Printf("  output: %s\n", output)
+			if domain != "" {
+				fmt.Printf("  domain: %s\n", domain)
+			}
+			if force {
+				fmt.Println("  force:  true (cache bypass requested)")
+			}
+			fmt.Println()
+
+			// Build query string from task + domain.
+			query := task
+			if domain != "" {
+				query = fmt.Sprintf("[%s] %s", domain, task)
+			}
+
+			// Determine which outputs to generate.
+			outputs := []string{output}
+			if output == "all" {
+				outputs = []string{"summary", "process", "diagram", "code", "cve"}
+			}
+
+			for _, out := range outputs {
+				select {
+				case <-cmd.Context().Done():
+					return cmd.Context().Err()
+				default:
+				}
+
+				if err := queryAndDisplay(client, query, out, force); err != nil {
+					fmt.Printf("  [%s] error: %v\n\n", out, err)
+				}
+			}
+
+			if annotate {
+				fmt.Println()
+				fmt.Println("NOTE: --annotate mode is not yet implemented (Phase 4).")
+				fmt.Println("Operator annotation will be available in a future release.")
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&task, "task", "", "Integration task description (required)")
+	cmd.Flags().StringVar(&output, "output", "all", "Output type: summary|process|diagram|code|cve|all")
+	cmd.Flags().StringVar(&domain, "domain", "", "Override domain classification")
+	cmd.Flags().BoolVar(&force, "force", false, "Bypass Redis cache, re-run refexplorer worker")
+	cmd.Flags().BoolVar(&annotate, "annotate", false, "Enter operator annotation mode after synthesis")
+
+	_ = cmd.MarkFlagRequired("task")
+
+	return cmd
+}
+
+// queryAndDisplay queries the ecosystem and displays results for a given output type.
+func queryAndDisplay(client *ecosystem.EcosystemClient, query, outputType string, force bool) error {
+	// Map output types to collections.
+	collectionMap := map[string]struct {
+		collection string
+		label      string
+	}{
+		"summary": {"lessons_learned", "Lessons Learned (Summary)"},
+		"process": {"lessons_learned", "Lessons Learned (Process)"},
+		"diagram": {"wiring_patterns", "Wiring Patterns (Diagram)"},
+		"code":    {"repo_surfaces", "Repo Surfaces (Code)"},
+		"cve":     {"domain_knowledge", "Domain Knowledge (CVE)"},
+	}
+
+	entry, ok := collectionMap[outputType]
+	if !ok {
+		return fmt.Errorf("unknown output type: %s", outputType)
+	}
+
+	fmt.Printf("--- %s ---\n", entry.label)
+
+	if force {
+		fmt.Println("  [stub] --force: refexplorer k3s Job would be triggered here.")
+		fmt.Println("         Refexplorer worker not yet deployed — using cached data.")
+	}
+
+	// Query the ecosystem.
+	result, err := client.Query(entry.collection, query)
+	if err != nil {
+		return err
+	}
+
+	// Try to pretty-print JSON results.
+	var parsed interface{}
+	if json.Unmarshal(result, &parsed) == nil {
+		pretty, err := json.MarshalIndent(parsed, "  ", "  ")
+		if err == nil {
+			fmt.Printf("  %s\n", string(pretty))
+		} else {
+			fmt.Printf("  %s\n", string(result))
+		}
+	} else {
+		fmt.Printf("  %s\n", string(result))
+	}
+
+	fmt.Println()
+	return nil
 }
 
 // ---------------------------------------------------------------------------

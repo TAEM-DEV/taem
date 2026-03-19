@@ -1,11 +1,11 @@
 // internal/ecosystem/client.go
 //
-// Read-only Qdrant HTTP client for the 5 ecosystem collections per ADR-006.
-// The kernel reads from ecosystem via this client — it never writes directly
-// to Qdrant (C-006-002). Writes happen via the ecosystem service API.
+// HTTP client for ecosystem collections per ADR-006 + ADR-009a.
+// The kernel reads from ecosystem via this client. Writes happen via the
+// ecosystem service API (e.g., WriteLesson for backward knowledge).
 //
 // Collections: repo_surfaces, mission_memory, constraint_index,
-//              wiring_patterns, lessons_learned.
+//              wiring_patterns, lessons_learned, domain_knowledge.
 //
 // If ecosystem is unreachable, methods return clear errors so NAV can
 // emit HOLD per C-006-004.
@@ -15,6 +15,7 @@
 package ecosystem
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,8 +24,8 @@ import (
 	"time"
 )
 
-// EcosystemClient is a read-only HTTP client for the TAEM ecosystem
-// service that fronts 5 Qdrant collections.
+// EcosystemClient is an HTTP client for the TAEM ecosystem
+// service that fronts Qdrant collections.
 type EcosystemClient struct {
 	baseURL    string
 	httpClient *http.Client
@@ -33,6 +34,23 @@ type EcosystemClient struct {
 // staleResponse is the JSON shape returned by the staleness endpoint.
 type staleResponse struct {
 	Stale bool `json:"stale"`
+}
+
+// LessonRecord represents a mission lesson to be indexed into lessons_learned.
+// Per ADR-009a Phase 3: backward knowledge — mission outcomes indexed post-land.
+type LessonRecord struct {
+	MissionID   string   `json:"mission_id"`
+	Task        string   `json:"task"`
+	Repos       []string `json:"repos"`
+	GoSignals   int      `json:"go_signals"`
+	NoGoSignals int      `json:"nogo_signals"`
+	HoldSignals int      `json:"hold_signals"`
+	WarnSignals int      `json:"warn_signals"`
+	StepCount   int      `json:"step_count"`
+	DurationS   int64    `json:"duration_s"`
+	Outcome     string   `json:"outcome"`
+	KeyFindings []string `json:"key_findings"`
+	Timestamp   string   `json:"timestamp"`
 }
 
 // NewClient creates a new EcosystemClient pointing at the given base URL.
@@ -120,6 +138,12 @@ func (c *EcosystemClient) SearchLessons(query string) ([]byte, error) {
 	return c.searchCollection("lessons_learned", query)
 }
 
+// SearchDomainKnowledge searches the domain_knowledge collection.
+// ADR-009a: PRB-ADR and PRB-SKP use this for field intelligence context.
+func (c *EcosystemClient) SearchDomainKnowledge(query string) ([]byte, error) {
+	return c.searchCollection("domain_knowledge", query)
+}
+
 // Query is the generic query function wired into Inputs.EcosystemQuery.
 // Controllers call it with a collection name and free-text query.
 func (c *EcosystemClient) Query(collection, query string) ([]byte, error) {
@@ -132,6 +156,16 @@ func (c *EcosystemClient) Query(collection, query string) ([]byte, error) {
 	return c.searchCollection(collection, query)
 }
 
+// WriteLesson posts a lesson record to the ecosystem service for indexing
+// into the lessons_learned collection. Per ADR-009a: backward knowledge.
+func (c *EcosystemClient) WriteLesson(lesson LessonRecord) error {
+	payload, err := json.Marshal(lesson)
+	if err != nil {
+		return fmt.Errorf("ecosystem: marshal lesson: %w", err)
+	}
+	return c.doPost(c.baseURL+"/api/lessons", payload)
+}
+
 // searchCollection is the shared implementation for collection searches.
 // Routes to the correct ecosystem service API endpoints.
 func (c *EcosystemClient) searchCollection(collection, query string) ([]byte, error) {
@@ -141,6 +175,7 @@ func (c *EcosystemClient) searchCollection(collection, query string) ([]byte, er
 		"constraint_index": "/api/constraints/search",
 		"wiring_patterns":  "/api/wiring_patterns/search",
 		"lessons_learned":  "/api/lessons/search",
+		"domain_knowledge": "/api/domain_knowledge/search", // ADR-009a
 	}
 	endpoint, ok := endpointMap[collection]
 	if !ok {
@@ -177,4 +212,20 @@ func (c *EcosystemClient) doGet(rawURL string, params url.Values) ([]byte, error
 		return nil, fmt.Errorf("ecosystem: failed to read response body: %w", err)
 	}
 	return body, nil
+}
+
+// doPost performs an HTTP POST with a JSON body.
+// Returns a clear error if the ecosystem service is unreachable (C-006-004).
+func (c *EcosystemClient) doPost(rawURL string, payload []byte) error {
+	resp, err := c.httpClient.Post(rawURL, "application/json", bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("ecosystem unreachable: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("ecosystem: POST %s failed with status %d: %s", rawURL, resp.StatusCode, string(respBody))
+	}
+	return nil
 }

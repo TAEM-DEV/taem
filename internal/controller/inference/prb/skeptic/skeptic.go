@@ -5,6 +5,9 @@
 // it queries ecosystem lessons_learned for similar prior failures — this is
 // the Skeptic's primary advantage over other PRB members.
 //
+// ADR-009a Phase 2: also queries domain_knowledge for field intelligence,
+// giving PRB-SKP academic literature context to strengthen adversarial analysis.
+//
 // Uses inference.Route() for Ollama-first LLM calls per ADR-005.
 // Emits HOLD when Ollama is not configured (ErrOllamaNotConfigured).
 package skeptic
@@ -56,11 +59,12 @@ type skepticResponse struct {
 // Steps:
 //  1. Read step-plan.json and integration-map.json from inputs
 //  2. Query ecosystem lessons_learned via inputs.EcosystemQuery
-//  3. Load system prompt from prompts/prb_skeptic.txt
-//  4. Construct user content with plan + integration map + lessons learned
-//  5. Call inference.Route()
-//  6. Handle ErrOllamaNotConfigured -> HOLD
-//  7. Parse JSON response for vote: GO/NO-GO
+//  3. Query ecosystem domain_knowledge for field intelligence (ADR-009a)
+//  4. Load system prompt from prompts/prb_skeptic.txt
+//  5. Construct user content with plan + integration map + lessons learned + domain knowledge
+//  6. Call inference.Route()
+//  7. Handle ErrOllamaNotConfigured -> HOLD
+//  8. Parse JSON response for vote: GO/NO-GO
 func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (controller.Signal, error) {
 	select {
 	case <-ctx.Done():
@@ -121,6 +125,26 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		lessonsLearned = "lessons_learned: not available (ecosystem query not configured)"
 	}
 
+	// ADR-009a Phase 2: Query domain_knowledge for field intelligence.
+	var domainKnowledge string
+	if inputs.EcosystemQuery != nil {
+		select {
+		case <-ctx.Done():
+			return controller.Signal{}, ctx.Err()
+		default:
+		}
+
+		result, err := inputs.EcosystemQuery("domain_knowledge", string(stepPlan))
+		if err != nil {
+			// Domain knowledge query failure is non-fatal — proceed without.
+			domainKnowledge = fmt.Sprintf("domain_knowledge query failed: %v", err)
+		} else {
+			domainKnowledge = string(result)
+		}
+	} else {
+		domainKnowledge = "domain_knowledge: not available (ecosystem query not configured)"
+	}
+
 	// Load system prompt.
 	promptPath := filepath.Join(c.promptsDir, "prb_skeptic.txt")
 	systemPrompt, err := os.ReadFile(promptPath)
@@ -128,13 +152,14 @@ func (c *Controller) Run(ctx context.Context, inputs controller.Inputs) (control
 		return controller.Signal{}, fmt.Errorf("load system prompt: %w", err)
 	}
 
-	// Build user content with all three inputs.
+	// Build user content with all inputs including domain knowledge.
 	userContent := fmt.Sprintf("## Mission Type\n%s\n\n", inputs.MissionType)
 	userContent += fmt.Sprintf("## step-plan.json\n```json\n%s\n```\n", string(stepPlan))
 	if len(integrationMap) > 0 {
 		userContent += fmt.Sprintf("\n## integration-map.json\n```json\n%s\n```\n", string(integrationMap))
 	}
 	userContent += fmt.Sprintf("\n## lessons_learned\n%s\n", lessonsLearned)
+	userContent += fmt.Sprintf("\n## domain_knowledge (field intelligence)\n%s\n", domainKnowledge)
 
 	select {
 	case <-ctx.Done():
