@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="profile/assets/taem-hero-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="profile/assets/taem-hero-light.svg">
-    <img alt="TAEM — Terminal Area Energy Management" src="profile/assets/taem-hero-dark.svg" width="800">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/taem-hero-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/taem-hero-light.svg">
+    <img alt="TAEM — Terminal Area Energy Management" src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/taem-hero-dark.svg" width="800">
   </picture>
 </p>
 
@@ -15,7 +15,6 @@
 <p align="center">
   <a href="https://github.com/taem-dev/taem"><img src="https://img.shields.io/badge/kernel-v0.1-blue?style=flat-square" alt="Kernel"></a>
   <a href="https://github.com/taem-dev/adrs"><img src="https://img.shields.io/badge/ADRs-7_active-orange?style=flat-square" alt="ADRs"></a>
-  <a href="https://github.com/taem-dev/taem/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-green?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/Go-1.25-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go 1.25">
 </p>
 
@@ -24,7 +23,7 @@
 <br>
 
 <p align="center">
-  <img src="profile/assets/mission-flow.svg" alt="Mission Flow — 7 Phases from Launch to Landing" width="780">
+  <img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/mission-flow.svg" alt="Mission Flow — 7 Phases from Launch to Landing" width="780">
 </p>
 
 <br>
@@ -52,7 +51,7 @@ One command. Full preflight. Every architectural constraint checked before you w
 ## How It Works
 
 <p align="center">
-  <img src="profile/assets/gate-machine.svg" alt="Gate State Machine — ADVANCE / HOLD / ABORT" width="720">
+  <img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/gate-machine.svg" alt="Gate State Machine — ADVANCE / HOLD / ABORT" width="720">
 </p>
 
 The **gate state machine** is a pure function — zero network, zero side effects, fully deterministic. It evaluates controller signals and decides: advance to the next phase, hold for remediation, or abort the mission.
@@ -74,7 +73,7 @@ Signals In  ──→  [ Gate Evaluate ]  ──→  ADVANCE | HOLD | ABORT
 ## Repositories
 
 <p align="center">
-  <img src="profile/assets/repo-map.svg" alt="Repository Architecture — How repos connect" width="780">
+  <img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/repo-map.svg" alt="Repository Architecture — How repos connect" width="780">
 </p>
 
 The TAEM ecosystem is four repositories, each with a single responsibility:
@@ -153,7 +152,7 @@ go install github.com/taem-dev/taem/cmd/taem@latest
 ## The 15 Controllers
 
 <p align="center">
-  <img src="profile/assets/controllers.svg" alt="15 Controllers across 7 Phases" width="780">
+  <img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/controllers.svg" alt="15 Controllers across 7 Phases" width="780">
 </p>
 
 Every controller implements one interface:
@@ -187,7 +186,7 @@ type Controller interface {
 ## Inference Architecture
 
 <p align="center">
-  <img src="profile/assets/inference-router.svg" alt="Inference Router — Ollama first, Anthropic fallback" width="700">
+  <img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/inference-router.svg" alt="Inference Router — Ollama first, Anthropic fallback" width="700">
 </p>
 
 Phases 00–03 use **zero LLM calls**. All intelligence in those phases is deterministic — set intersection, topological sort, schema validation, regex.
@@ -212,7 +211,7 @@ Every inference call logs: backend used, confidence score, latency, and whether 
 <tr>
 <td width="33%" align="center">
 <br>
-<img src="profile/assets/principle-deterministic.svg" alt="Deterministic" width="120">
+<img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/principle-deterministic.svg" alt="Deterministic" width="120">
 <br><br>
 <strong>Deterministic First</strong><br>
 <sub>11 of 15 controllers use zero LLM calls. Architecture is validated with set theory, not vibes.</sub>
@@ -220,7 +219,7 @@ Every inference call logs: backend used, confidence score, latency, and whether 
 </td>
 <td width="33%" align="center">
 <br>
-<img src="profile/assets/principle-git.svg" alt="Git-Native" width="120">
+<img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/principle-git.svg" alt="Git-Native" width="120">
 <br><br>
 <strong>Git-Native State</strong><br>
 <sub>All mission state lives in git commits. No external databases. Full audit trail. Replayable.</sub>
@@ -228,7 +227,7 @@ Every inference call logs: backend used, confidence score, latency, and whether 
 </td>
 <td width="33%" align="center">
 <br>
-<img src="profile/assets/principle-unicast.svg" alt="Unicast Only" width="120">
+<img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/principle-unicast.svg" alt="Unicast Only" width="120">
 <br><br>
 <strong>Unicast Only</strong><br>
 <sub>No service mesh. No message queues. No multicast. Every connection is explicit and traceable.</sub>
@@ -289,7 +288,7 @@ All code in the TAEM ecosystem is governed by seven ADRs. These are not guidelin
 <br>
 
 <p align="center">
-  <img src="profile/assets/taem-footer.svg" alt="TAEM" width="400">
+  <img src="https://raw.githubusercontent.com/TAEM-DEV/.github/main/assets/taem-footer.svg" alt="TAEM" width="400">
 </p>
 
 <p align="center">
