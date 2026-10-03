@@ -150,3 +150,8 @@ All code in this repo is governed by [ADR-000](https://github.com/TAEM-DEV/adrs/
 - **ADR-008** — Inference Model Strategy: `qwen2.5-coder:7b` as primary model (replaces llama3.2)
 
 See the [adrs repo](https://github.com/TAEM-DEV/adrs) for the complete constraint corpus.
+
+<!-- org-footer -->
+---
+
+<p align="center"><sub>Part of <a href="https://github.com/TAEM-DEV">TAEM</a> · mission control preflight for software integration · built by <a href="https://github.com/ry-ops">ry-ops</a></sub></p>
